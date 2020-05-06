@@ -14,7 +14,7 @@ app.use(express.json());
 
 //rutas
 app.get('/',(req,res)=>{
-    res.send('Hello World');
+    res.send('Hello World prueba');
 });
 
 //iniciando servidor
