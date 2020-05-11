@@ -45,6 +45,8 @@
 "out"       {return 'R_Out';}
 "println"   {return 'R_Println';}
 "print"     {return 'R_Print';}
+"true"      {return 'R_True';}
+"false"     {return 'R_False';}
 /*  SIMBOLO */
 
 ":"			{return 'S_DosPuntos';}
@@ -59,7 +61,7 @@
 ","         {return 'S_Coma';}
 "\""        {return 'S_ComillaDoble';}
 
-/*  OPERACIONES */
+/*  EXPRESION */
 
 "+"         {return 'OP_Mas';}
 "-"         {return 'OP_Menos';}
@@ -125,16 +127,14 @@ INICIO
     : CONTENIDO EOF
         {console.log("ANALISIS FINALIZADO");}
 ;
-
+/*----------------------------------------------------------------------LISTADO GENERAL----------------------------------------------------------------------*/
 CONTENIDO
     : CONTENIDO IMPORT {console.log($2);}
     | IMPORT {console.log($1 + "\n"); }
     | CONTENIDO MODIFICADORES_ACCESO CLASES {console.log( $2+' '+$3 + "\n");}
     | MODIFICADORES_ACCESO CLASES {console.log($1+' ' + $2 + "\n");}
-    | CONTENIDO VARIABLE {console.log($2 + "\n");}
-    | VARIABLE {console.log($1 + "\n"); }
 ;
-
+/*----------------------------------------------------------------------IMPORTS----------------------------------------------------------------------*/
 IMPORT
     : R_Import LISTADO_IMPORT S_PuntoComa {$$ = $1 +' '+ $2+ $3;}
 ;
@@ -144,8 +144,33 @@ LISTADO_IMPORT
     | Identificador {$$ = $1;}
 ;
 
+/*----------------------------------------------------------------------CLASES----------------------------------------------------------------------*/
+CLASES 
+    : R_Class Identificador S_LlaveAbre  LISTA_CLASES S_LlaveCierra {$$ = $1+ $2 + $3+"\n" +$4 +"\n"+$5 ;}
+;
+
+LISTA_CLASES
+    : LISTA_CLASES CONTENIDO_CLASE {$$ = $1 + $2;}
+    | CONTENIDO_CLASE {$$ = $1;}    
+;
+
+CONTENIDO_CLASE
+    : TIPO_DATO Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre  S_LlaveCierra {$$ = $1 +' '+ $2 + $3 +$4 +$5 +$6+"\n" + $7+"\n";}
+    | VARIABLE {console.log($1+ "\n");}
+    | R_Void METODO_VOID {$$ = $1 +' '+ $2;}
+    | LLAMAR_METODOF_CLASE {console.log($1)}
+    
+;
+
+METODO_VOID
+    : R_Main S_ParentesisAbre S_ParentesisCierra S_LlaveAbre METODOS_LL S_LlaveCierra {$$ = $1 + $2 + $3 +$4 +"\n"+ $5 +"\n"+ $6;}
+    | Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre METODOS_LL S_LlaveCierra {$$ = $1 + $2 + $3 +$4 + $5 +"\n" + $6+"\n" + $7;}
+;
+
+/*----------------------------------------------------------------------VARIABLE----------------------------------------------------------------------*/
+
 VARIABLE
-    : TIPO_DATO LISTADO_ID_VARIABLE S_PuntoComa {$$ = $1 + ' ' + $2+ $3;}
+    : TIPO_DATO LISTADO_ID_VARIABLE S_PuntoComa {$$ = $1 + ' ' + $2+ $3+"\n";}
 ;
 
 LISTADO_ID_VARIABLE
@@ -154,28 +179,12 @@ LISTADO_ID_VARIABLE
 ;
 
 CONTENIDO_VARIABLE
-    : Identificador {$$ = $1;}
+    //aqui tengo que agregar la asignacion de variables
+    :Identificador S_Igual EXPRESION  {$$ = $1 + $2 + $3;}
+    |Identificador {$$ = $1;}
 ;
-
-CLASES 
-    : R_Class Identificador S_LlaveAbre LISTA_METODOS S_LlaveCierra {$$ = $1+' ' + $2 + $3 +$4 +$5 +"\n";}
-;
-
-LISTA_METODOS
-    : LISTA_METODOS METODO {$$ = $1 + $2;}
-    | METODO {$$ = $1;}
-;
-
-METODO
-    : TIPO_DATO Identificador S_ParentesisAbre S_ParentesisCierra S_LlaveAbre S_LlaveCierra {$$ = $1 +' '+ $2 + $3 +$4 +$5 +$6+"\n";}
-    | R_Void METODO_VOID {$$ = $1 +' '+ $2;}
-;
-
-METODO_VOID
-    : R_Main S_ParentesisAbre S_ParentesisCierra S_LlaveAbre S_LlaveCierra {$$ = $1 + $2 + $3 +$4 + $5;}
-    | Identificador S_ParentesisAbre S_ParentesisCierra S_LlaveAbre S_LlaveCierra {$$ = $1 + $2 + $3 +$4 + $5;}
-;
-
+/*------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/*----------------------------------------------------------------------TIPOS_DATO----------------------------------------------------------------------*/
 TIPO_DATO
     : T_Int {$$ = $1;}
     | T_String {$$ = $1;}
@@ -190,5 +199,69 @@ MODIFICADORES_ACCESO
     | R_Private {$$ = $1;}
     |
 ;
+/*----------------------------------------------------------------------EXPRESIONES----------------------------------------------------------------------*/
+EXPRESION
+    : EXPRESION OP_Mas EXPRESION {$$ = $1 + $2 + $3;}
+    | EXPRESION OP_Menos EXPRESION {$$ = $1 + $2 + $3;}
+    | EXPRESION OP_Multiplicacion EXPRESION {$$ = $1 + $2 + $3;}
+    | EXPRESION OP_Division EXPRESION {$$ = $1 + $2 + $3;}
+    | EXPRESION OP_Potencia EXPRESION {$$ = $1 + $2 + $3;}
+    | EXPRESION OP_Modulo EXPRESION {$$ = $1 + $2 + $3;}
+    | OP_Menos EXPRESION %prec UMINUS {$$ = $1 + $2;}
+    | S_ParentesisAbre EXPRESION S_ParentesisCierra {$$ = $1 + $2 + $3;}
+    | TERMINAL {$$ = $1;}
+;
+
+TERMINAL
+    : Identificador {$$ = $1;}
+    | Cadena {$$ = $1;}
+    | Decimal {$$ = $1;}
+    | Entero {$$ = $1;}
+    | Char {$$ = $1;}
+    | R_True {$$ = $1;}
+    | R_False {$$ = $1;}
+    | CHAR_Especial {$$ = $1;}
+    | Identificador S_ParentesisAbre FUNC S_ParentesisCierra {$$ = $1 + $2 + $3 + $4;}
+    
+;
+/*------------------------------------------------------------------------------------------------------------------------------------------------------*/
+FUNC
+    :EXPRESION
+    |
+;
+/*----------------------------------------------------------------------PARAMETROS METODOS----------------------------------------------------------------------*/
+PARAMETROS
+    : TIPO_DATO Identificador LISTA_PARAMETROS {$$ = $1 +" "+ $2 +$3;}
+    | TIPO_DATO Identificador {$$ = $1 +" "+ $2;}
+    |
+;
+
+LISTA_PARAMETROS
+    : LISTA_PARAMETROS S_Coma TIPO_DATO Identificador {$$ = $1 + $2 +" " +$3 + $4;}
+    | S_Coma TIPO_DATO Identificador {$$ = $1 +" "+ $2 +$3;}
+;
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------LLAMADAS FUNCION DENTRO METODOS----------------------------------------------------------------------*/
+METODOS_LL
+    : METODOS_LL Identificador S_ParentesisAbre PARAMETROS_FUNC S_ParentesisCierra S_PuntoComa {$$ = $1 + $2 +$3 + $4 +$5 + $6+"\n";}
+    | Identificador S_ParentesisAbre PARAMETROS_FUNC S_ParentesisCierra S_PuntoComa {$$ = $1 + $2 +$3 + $4 +$5+"\n";}
+;
+
+PARAMETROS_FUNC
+    : PARAMETROS_FUNC S_Coma EXPRESION {$$ = $1 + $2 +$3;}
+    | EXPRESION {$$ = $1;}
+    |
+;
+/*--------------------------------------------------------------------LLAMADAS FUNCION FUERA METODOS----------------------------------------------------------------------*/
+LLAMAR_METODOF_CLASE
+    : Identificador S_ParentesisAbre PARAMETROS_FUNC S_ParentesisCierra S_PuntoComa {$$ = $1 + $2 +$3 + $4 +$5 + "\n";}
+;
+
+/*------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+
+
+/*--------------------------------------------------------------------INSTRUCCIONES CONTENIDO METODOS----------------------------------------------------------------------*/
+
 
 

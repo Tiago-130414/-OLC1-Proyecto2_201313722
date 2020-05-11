@@ -10,33 +10,21 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 
-int prueba,prueba2;
-String prueba3;
-boolean prueba4;
+
 
 public class ClaseA{
-    void main (){
 
-    }
-
-    void funcion(){
-
-    }
-
-    double potencia(){
-        
-    }
-    int potencia(){
-        
-    }
-    String potencia(){
-        
-    }
-    char potencia(){
-        
-    }
-    boolean potencia(){
-
+    int prueba,prueba2;
+    String prueba3 = funcion() + 5+6+7+(9*5+KK), prueba6;
+    boolean prueba4;
+    pruebaFuera1(5+5,gay,pruebakk());
+    pruebaFuera2(5+5,gay,pruebakk());
+    pruebaFuera3(5+5,gay,pruebakk());
+    void funcion(String pruebaP){
+        prueba(5+5);
+        prueba2();
+        prueba3();
+        prueba4();
     }
 
 }
