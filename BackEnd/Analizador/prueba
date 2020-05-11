@@ -1,0 +1,36 @@
+////////////////////////////////comentario
+///////////////////////////////comentario/
+////////////////////////////////comentario*/
+
+/*
+        #################### Archivo de entrada #1 #################
+        ## El objetivo de este archivo es evaluar el manejo   ######
+        ## correcto de la tabla de simbolos.                  ######
+        ## Los tipos aceptados son:                           ######
+        ####### Int
+        ####### Float
+        ####### Char
+        ####### String
+        ####### Boolean
+*/
+
+/*----------------------------------------------------------------------------
+        --------------------- 2ra. Area: HTML
+        ----------------------------------------------------------------------------*/
+
+
+var1 
+_var2
+"cadena con \n \t \r \\ salto de linea"
+1+1
+'n'
+'t'
+'r'
+'a'
+'\"'
+'\''
+'\n'
+'\r'
+'\t'
+'\\'
+' '

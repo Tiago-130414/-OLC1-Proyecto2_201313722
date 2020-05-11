@@ -1,0 +1,44 @@
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.util.Scanner;
+import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
+
+int prueba,prueba2;
+String prueba3;
+boolean prueba4;
+
+public class ClaseA{
+    void main (){
+
+    }
+
+    void funcion(){
+
+    }
+
+    double potencia(){
+        
+    }
+    int potencia(){
+        
+    }
+    String potencia(){
+        
+    }
+    char potencia(){
+        
+    }
+    boolean potencia(){
+
+    }
+
+}
+
+
