@@ -14,19 +14,37 @@ import javax.swing.tree.DefaultTreeModel;
 
 public class ClaseA{
 
-    int prueba,prueba2;
-    String prueba3 = funcion() + 5+6+7+(9*5+KK), prueba6;
-    boolean prueba4;
-    pruebaFuera1(5+5,gay,pruebakk());
-    pruebaFuera2(5+5,gay,pruebakk());
-    pruebaFuera3(5+5,gay,pruebakk());
-    void funcion(String pruebaP){
-        prueba(5+5);
-        prueba2();
-        prueba3();
-        prueba4();
-    }
+    boolean a = fun(1 + 2 + fun( fun() + 3) + 2 );
+    
+    void funcion (){
+       
+        a = fun(1 + 2 + fun( fun() + 3) + 2 );
+        System.out.print("texto" + texto);
+        System.out.println("texto" + texto + 'j' + 5.5 + 5 + true + false);
+        a = fun(1 + 2 + fun( fun() + 3) + 2 );
+        a = fun(1 + 2 + fun( fun() + 3) + 2 );
+        a = fun(1 + 2 + fun( fun() + 3) + 2 );
 
+        return prueba;
+
+        if (false || true) {
+            System.out.println("texto" + texto + 'j' + 5.5 + 5 + true + false);
+        }else{
+            System.out.print("texto" + texto);
+        }
+
+        while(false || true){
+            System.out.print("texto" + texto);
+        }
+
+        do{
+            System.out.print("texto" + texto);
+        }while(true);
+
+        do{
+            System.out.print("texto" + texto);
+        }while(true);
+    }
 }
 
 
