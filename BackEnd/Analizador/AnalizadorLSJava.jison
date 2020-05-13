@@ -56,6 +56,8 @@
 "print"     {return 'R_Print';}
 "true"      {return 'R_True';}
 "false"     {return 'R_False';}
+"case"      {return 'R_Case';}
+"default"   {return 'def';}
 /*  SIMBOLO */
 
 ":"			{return 'S_DosPuntos';}
@@ -132,6 +134,7 @@ INICIO
         {console.log("ANALISIS FINALIZADO");}
 ;
 /*----------------------------------------------------------------------LISTADO GENERAL----------------------------------------------------------------------*/
+
 CONTENIDO
     : CONTENIDO IMPORT {console.log($2);}
     | IMPORT {console.log($1 + "\n"); }
@@ -159,22 +162,22 @@ LISTA_CLASES
 ;
 
 CONTENIDO_CLASE
-    : TIPO_DATO Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre LISTA_INSTRUCCIONES S_LlaveCierra {$$ = $1 +' '+ $2 + $3 +$4 +$5 +$6+"\n" + $7+"\n"+$8;}
+    : TIPO_DATO Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ = $1 +' '+ $2 + $3 +$4 +$5 +$6+"\n" + $7+"\n"+$8;}
     | VARIABLE {console.log($1+ "\n");}
-    | R_Void METODO_VOID {$$ = $1 +' '+ $2;}
+    | R_Void METODO_VOID {$$ = $1 + $2;}
     | LLAMAR_METODOF_CLASE {console.log($1)}
     
 ;
 
 METODO_VOID
-    : R_Main S_ParentesisAbre S_ParentesisCierra S_LlaveAbre LISTA_INSTRUCCIONES S_LlaveCierra {$$ = $1 + $2 + $3 +$4 +"\n"+ $5 +"\n"+ $6;}
-    | Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre LISTA_INSTRUCCIONES S_LlaveCierra {$$ = $1 + $2 + $3 +$4 + $5 +"\n" + $6+"\n" + $7;}
+    : R_Main S_ParentesisAbre S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ = $1 + $2 + $3 +$4 +"\n"+ $5 +"\n"+ $6;}
+    | Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ = $1 + $2 + $3 +$4 + $5 +"\n" + $6+"\n" + $7;}
 ;
 
 /*----------------------------------------------------------------------VARIABLE----------------------------------------------------------------------*/
 
 VARIABLE
-    : TIPO_DATO LISTADO_ID_VARIABLE S_PuntoComa {$$ = $1 + ' ' + $2+ $3+"\n";}
+    : TIPO_DATO LISTADO_ID_VARIABLE S_PuntoComa {$$ = $1 + ' ' + $2+ $3;}
 ;
 
 LISTADO_ID_VARIABLE
@@ -211,6 +214,7 @@ EXPRESION
 
 EXPRESION2
     : OPERADOR EXPRESION   {$$ = $1 + $2; }
+    | OPERADOR
     |   { $$ = ''; }
 ;
 
@@ -221,14 +225,16 @@ OPERADOR
     | OP_Division 
     | OP_Potencia 
     | OP_Modulo 
-    | REL_IgualIgual                                                        
+    | S_Igual S_Igual    { $$ = $1 + $2; }                                               
     | REL_Distinto                                                          
     | REL_MayorIgualQue                                                    
     | REL_MenorIgualQue                                                   
     | REL_MayorQue 
     | REL_MenorQue 
     | LOG_Concatenar                                                     
-    | LOG_OR                                                             
+    | LOG_OR
+    | OP_Menos OP_Menos
+    | OP_Mas OP_Mas                                                             
 ;
 
 VALOR1 
@@ -243,17 +249,18 @@ VALOR1
 VALOR2 
     : Entero
     | Decimal
-    | Identificador OPCIONAL { $$ = $1 + $2; }
+    | Identificador
+    | Identificador S_ParentesisAbre S_ParentesisCierra                                         { $$ = $1 + $2 + $3; }
+    | Identificador S_ParentesisAbre OPCIONAL S_ParentesisCierra                                  { $$ = $1 + $2 + $3 + $4; }
     | R_True
     | R_False
     | S_ParentesisAbre EXPRESION S_ParentesisCierra  { $$ = $1 + $2 + $3; }
 ;
 
 OPCIONAL 
-    : S_ParentesisAbre FUNC S_ParentesisCierra  { $$ = $1 + $2 + $3; }   
-    |  { $$ = ''; }                                   
-;
-
+    : EXPRESION
+    | OPCIONAL S_Coma EXPRESION                                                 { $$ = $1 + $2 + $3; }    
+    ;
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 FUNC
@@ -283,39 +290,42 @@ REDUCCION
 ;
 
 PARAMETROS_FUNC
-    : PARAMETROS_FUNC S_Coma EXPRESION {$$ = $1 + $2 +$3;}
-    | EXPRESION {$$ = $1;}
+    : PARAMETROS_FUNC S_Coma EXPRESION {$$ = $1 + $2 + $3;}
+    | EXPRESION
     | {$$='';}
 ;
 /*--------------------------------------------------------------------LLAMADAS FUNCION FUERA METODOS----------------------------------------------------------------------*/
 LLAMAR_METODOF_CLASE
-    : Identificador S_ParentesisAbre PARAMETROS_FUNC S_ParentesisCierra S_PuntoComa {$$ = $1 + $2 +$3 + $4 +$5 + "\n";}
+    : Identificador S_ParentesisAbre PARAMETROS_FUNC S_ParentesisCierra S_PuntoComa {$$ = $1 + $2 + $3 + $4 + $5;}
 ;
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 /*--------------------------------------------------------------------INSTRUCCIONES CONTENIDO METODOS----------------------------------------------------------------------*/
+INSTRUCCIONES
+    : LISTA_INS
+    | {$$='';}
+;
 
+LISTA_INS
+    : LISTA_INS LISTA_INSTRUCCIONES {$$ = $1 + $2;}
+    | LISTA_INSTRUCCIONES
+;
 
 LISTA_INSTRUCCIONES
-    : LISTA_INSTRUCCIONES METODOS_LL {$$ = $1 + $2;}
-    | METODOS_LL
-    | LISTA_INSTRUCCIONES VARIABLE {$$ = $1 + $2;}
-    | VARIABLE {$$ = $1;}
-    | LISTA_INSTRUCCIONES IMPRIMIR {$$ = $1 + $2;}
-    | IMPRIMIR {$$ = $1;}
-    | LISTA_INSTRUCCIONES S_TRANSFERENCIA  {$$ = $1 + $2;}
-    | S_TRANSFERENCIA  {$$ = $1;}
-    | LISTA_INSTRUCCIONES SENT_IF {$$ = $1 + $2;}
-    | SENT_IF {$$ = $1;}
-    | LISTA_INSTRUCCIONES LOOP_WHILE {$$ = $1 + $2;}
+    : METODOS_LL
+    | VARIABLE 
+    | IMPRIMIR 
+    | SENT_IF
     | LOOP_WHILE
-    | LISTA_INSTRUCCIONES LOOP_DO_WHILE {$$ = $1 + $2;}
     | LOOP_DO_WHILE
+    | LOOP_FOR
+    | SENT_SWITCH
+    | S_TRANSFERENCIA
 ;
 /*---------------------------------------------PRINT---------------------------------------------------------*/
 IMPRIMIR 
-    : R_System S_Punto R_Out S_Punto TIPO_IMPRESION S_ParentesisAbre EXPRESION S_ParentesisCierra S_PuntoComa {$$ = $1 + $2 +$3 + $4 + $5 + $6 + $7 + $8 + $9 +"\n"}
+    : R_System S_Punto R_Out S_Punto TIPO_IMPRESION S_ParentesisAbre EXPRESION S_ParentesisCierra S_PuntoComa {$$ = $1 + $2 + $3 + $4 + $5 + $6 + $7 + $8 + $9;}
 ;
 
 TIPO_IMPRESION
@@ -324,34 +334,82 @@ TIPO_IMPRESION
 ;
 
 S_TRANSFERENCIA
-    : R_Break S_PuntoComa {$$ = $1 + $2+"\n";}
-    | R_Continue S_PuntoComa {$$ = $1 + $2+"\n";}
-    | R_Return FUNC S_PuntoComa {$$ = $1 +' '+ $2 +$3 +"\n";}
+    : R_Break S_PuntoComa { $$ = $1 + $2; }
+    | R_Continue S_PuntoComa { $$ = $1 + $2; }
+    | R_Return FUNC S_PuntoComa { $$ = $1 + $2 + $3; }
 ;
 
 /*---------------------------------------------IF---------------------------------------------------------*/
 SENT_IF
-    : R_If CONT_IF ELSE  {$$ = $1+ $2 +$3;}
+    : R_If CONT_IF ELSE  { $$ = $1+ $2 +$3; }
 ;
 
 CONT_IF
-    : S_ParentesisAbre EXPRESION S_ParentesisCierra S_LlaveAbre LISTA_INSTRUCCIONES S_LlaveCierra   {$$ = $1+ $2 +$3 +$4 +"\n"+$5+"\n" +$6;}
+    : S_ParentesisAbre EXPRESION S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra   {$$ = $1+ $2 +$3 + $4 + $5 + $6;}
 ;
 
 ELSE
-    : R_Else AB {$$ = $1+ $2;}
-    | {$$='';}
+    : R_Else AB { $$ = $1 + $2; }
+    | { $$ = ''; }
 ;
 
 AB
-    : S_LlaveAbre LISTA_INSTRUCCIONES S_LlaveCierra {$$ = $1+"\n"+ $2+"\n"+$3;}
+    : S_LlaveAbre INSTRUCCIONES S_LlaveCierra { $$ = $1 + $2 + $3; }
     | SENT_IF 
 ;
+/*---------------------------------------------SWITCH---------------------------------------------------------*/
+
+SENT_SWITCH
+    : R_Switch S_ParentesisAbre EXPRESION S_ParentesisCierra S_LlaveAbre LISTA_CASE S_LlaveCierra { $$ = $1 + $2 + $3 + $4 + $5 + $6 + $7; }
+;
+
+LISTA_CASE
+    : LS_CASE
+    | { $$= ''; }
+;
+
+
+LS_CASE
+    : LS_CASE DEF_CASE { $$ = $1 + $2; }
+    | DEF_CASE
+;
+
+DEF_CASE
+    : RED_SWITCH S_DosPuntos INSTRUCCIONES { $$ = $1 + $2 + $3; }
+;
+
+RED_SWITCH
+    : R_Case EXPRESION { $$ = $1 + $2; }
+    | def
+;
+
 /*---------------------------------------------WHILE---------------------------------------------------------*/
   LOOP_WHILE
-    : R_While CONT_IF {$$ = $1+ $2;}
+    : R_While CONT_IF { $$ = $1 + $2; }
 ;
 /*--------------------------------------------- DO WHILE---------------------------------------------------------*/
   LOOP_DO_WHILE
-    : R_Do S_LlaveAbre LISTA_INSTRUCCIONES S_LlaveCierra R_While S_ParentesisAbre EXPRESION S_ParentesisCierra S_PuntoComa {$$ = $1+$2+'\n'+$3+$4+$5+$6 +$7+$8+$9;}
+    : R_Do S_LlaveAbre INSTRUCCIONES S_LlaveCierra R_While S_ParentesisAbre EXPRESION S_ParentesisCierra S_PuntoComa { $$ = $1 + $2 + $3 + $4 + $5 + $6 + $7 + $8 + $9; }
 ;
+
+/*--------------------------------------------- FOR ---------------------------------------------------------*/
+
+LOOP_FOR
+    : R_For S_ParentesisAbre CONT_FOR EXPRESION S_PuntoComa FIN_FOR S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra { $$ = $1 + $2 + $3 + $4 + $5 + $6 + $7 + $8 + $9 + $10; }
+;
+
+CONT_FOR
+    : VARIABLE
+    | METODOS_LL
+;
+
+FIN_FOR
+    : Identificador S_Igual EXPRESION                                                  { $$ = $1 + $2 + $3; }
+    | Identificador INCREMENTO                                                         { $$ = $1 + $2; }
+    ;
+
+
+INCREMENTO 
+    : OP_Menos OP_Menos                                                 { $$ = $1 + $2; }
+    | OP_Mas OP_Mas                                                     { $$ = $1 + $2; }
+    ;

@@ -37,7 +37,7 @@ function mostrarContenido(contenido) {
   txt.innerHTML = contenido;
 }
 
-function conexion() {
+function conexion2() {
   var pestanaAct = document.getElementsByClassName("tab-pane fade in active");
   var cajatxt = pestanaAct[0].getAttribute("id");
   var txt = document.getElementById("text" + cajatxt);
@@ -45,7 +45,7 @@ function conexion() {
   console.log(obtenerTexto);
 
   var url = 'http://localhost:3000/api/index';
-  var data = {texto:"\'"+obtenerTexto+"\'"};
+  var data = {texto:obtenerTexto};
   
   fetch(url, {
     method: 'POST', 
