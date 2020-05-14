@@ -1,7 +1,7 @@
 /* descripcion: ANALIZADOR DEL LENGUAJE JAVA */
 // segmento de codigo, importaciones y todo dentro de 
 /*%{
-    //declaraciones imports
+//declaraciones imports
 %}*/
 
 /*  Directivas lexicas, expresiones regulares ,Analisis Lexico */
@@ -66,7 +66,6 @@
 "}"			{return 'S_LlaveCierra';}
 "("			{return 'S_ParentesisAbre';}
 ")"			{return 'S_ParentesisCierra';}
-"="         {return 'S_Igual';}
 "."         {return 'S_Punto';}
 "\'"        {return 'S_ComillaSimple';}
 ","         {return 'S_Coma';}
@@ -74,20 +73,22 @@
 
 /*  EXPRESION */
 
+"++"        {return 'OP_Incremento';}
+"--"        {return 'OP_Decremento';}
 "+"         {return 'OP_Mas';}
 "-"         {return 'OP_Menos';}
 "*"         {return 'OP_Multiplicacion';}
 "/"         {return 'OP_Division';}
 "^"         {return 'OP_Potencia';}
 "%"         {return 'OP_Modulo';}
-"--"        {return 'OP_Decremento';}
-"++"        {return 'OP_Incremento';}
+
 
 /* OPERADORES RELACIONALES*/
 
 "<="	    {return 'REL_MenorIgualQue';}
 ">="		{return 'REL_MayorIgualQue';}
 "=="		{return 'REL_IgualIgual';}
+"="         {return 'S_Igual';}
 "!="		{return 'REL_Distinto';}
 "<"			{return 'REL_MenorQue';}
 ">"			{return 'REL_MayorQue';}
@@ -120,11 +121,15 @@
 /lex
 
 //PRECEDENCIA DE OPERADORES
-/* operator associations and precedence */
+//prescedencia operadores logicos
+%left 'LOG_Concatenar' 'LOG_OR'
+//prescedencia operadores relcionales
+%left 'REL_IgualIgual' 'REL_Distinto' 'REL_MayorIgualQue' 'REL_MayorQue' 'REL_MenorIgualQue' 'REL_MenorQue'
+//prescedencia operadores aritmeticos
 %left 'OP_Mas' 'OP_Menos'
-%left 'OP_Multiplicacion' 'OP_Division' 'OP_Modulo'
-%left 'OP_Potencia'
-%left UMINUS
+%left 'OP_Multiplicacion' 'OP_Division' 
+%left 'OP_Potencia' 'OP_Modulo'
+%left UMINUS PRUEBA
 //GRAMATICA
 %start INICIO
 
@@ -187,7 +192,7 @@ LISTADO_ID_VARIABLE
 
 CONTENIDO_VARIABLE
     //aqui tengo que agregar la asignacion de variables
-    :Identificador S_Igual EXPRESION  {$$ = $1 + $2 + $3;}
+    :Identificador S_Igual EXPRESION_G  {$$ = $1 + $2 + $3;}
     |Identificador {$$ = $1;}
 ;
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -208,63 +213,50 @@ MODIFICADORES_ACCESO
 ;
 /*----------------------------------------------------------------------EXPRESIONES----------------------------------------------------------------------*/
 
-EXPRESION 
-    : VALOR1 EXPRESION2        { $$ = $1 + $2; }
+EXPRESION_G 
+    : EXPRESION_G LOG_Concatenar EXPRESION_G                                                     { $$ = $1 + $2 + $3; }
+    | EXPRESION_G LOG_OR EXPRESION_G                                                             { $$ = $1 + $2 + $3; }
+    | EXPRESION_G REL_IgualIgual EXPRESION_G                                                     { $$ = $1 + $2 + $3; }   
+    | EXPRESION_G REL_MayorIgualQue EXPRESION_G                                                  { $$ = $1 + $2 + $3; }
+    | EXPRESION_G REL_MayorQue EXPRESION_G                                                       { $$ = $1 + $2 + $3; }
+    | EXPRESION_G REL_MenorIgualQue EXPRESION_G                                                  { $$ = $1 + $2 + $3; }
+    | EXPRESION_G REL_MenorQue EXPRESION_G                                                       { $$ = $1 + $2 + $3; }
+    | EXPRESION_G REL_Distinto EXPRESION_G                                                       { $$ = $1 + $2 + $3; }       
+    | EXPRESION_G OP_Mas EXPRESION_G                                                             { $$ = $1 + $2 + $3; }
+    | EXPRESION_G OP_Menos EXPRESION_G                                                           { $$ = $1 + $2 + $3; }
+    | EXPRESION_G OP_Multiplicacion EXPRESION_G                                                  { $$ = $1 + $2 + $3; }
+    | EXPRESION_G OP_Division EXPRESION_G                                                        { $$ = $1 + $2 + $3; }   
+    | EXPRESION_G OP_Potencia EXPRESION_G                                                        { $$ = $1 + $2 + $3; }
+    | EXPRESION_G OP_Modulo EXPRESION_G                                                          { $$ = $1 + $2 + $3; }
+    | CONTENIDO_EXPRESION OP_Decremento %prec PRUEBA
+    | CONTENIDO_EXPRESION OP_Incremento %prec PRUEBA
+    | OP_Menos  CONTENIDO_EXPRESION     %prec UMINUS                                                          { $$ = $1 + $2; }
+    | LOG_Not   CONTENIDO_EXPRESION     %prec UMINUS                                                          { $$ = $1 + $2; }
+    | CONTENIDO_EXPRESION
 ;
 
-EXPRESION2
-    : OPERADOR EXPRESION   {$$ = $1 + $2; }
-    | OPERADOR
-    |   { $$ = ''; }
-;
-
-OPERADOR 
-    : OP_Mas 
-    | OP_Menos
-    | OP_Multiplicacion 
-    | OP_Division 
-    | OP_Potencia 
-    | OP_Modulo 
-    | S_Igual S_Igual    { $$ = $1 + $2; }                                               
-    | REL_Distinto                                                          
-    | REL_MayorIgualQue                                                    
-    | REL_MenorIgualQue                                                   
-    | REL_MayorQue 
-    | REL_MenorQue 
-    | LOG_Concatenar                                                     
-    | LOG_OR
-    | OP_Menos OP_Menos
-    | OP_Mas OP_Mas                                                             
-;
-
-VALOR1 
-    : Cadena
-    | Char    
-    | CHAR_Especial                                                            
-    | VALOR2
-    | OP_Menos VALOR2  { $$ = $1 + $2; }
-    | LOG_Not VALOR2   { $$ = $1 + $2; }
-;
-
-VALOR2 
+ CONTENIDO_EXPRESION
     : Entero
     | Decimal
-    | Identificador
-    | Identificador S_ParentesisAbre S_ParentesisCierra                                         { $$ = $1 + $2 + $3; }
-    | Identificador S_ParentesisAbre OPCIONAL S_ParentesisCierra                                  { $$ = $1 + $2 + $3 + $4; }
+    | Identificador S_ParentesisAbre S_ParentesisCierra                                          { $$ = $1 + $2 + $3; }
+    | Identificador S_ParentesisAbre OPCIONAL S_ParentesisCierra                                 { $$ = $1 + $2 + $3 + $4; }
     | R_True
     | R_False
-    | S_ParentesisAbre EXPRESION S_ParentesisCierra  { $$ = $1 + $2 + $3; }
+    | S_ParentesisAbre EXPRESION_G S_ParentesisCierra                                            { $$ = $1 + $2 + $3; }
+    | Identificador
+    | Cadena
+    | Char    
+    | CHAR_Especial   
 ;
 
 OPCIONAL 
-    : EXPRESION
-    | OPCIONAL S_Coma EXPRESION                                                 { $$ = $1 + $2 + $3; }    
-    ;
+    : EXPRESION_G
+    | OPCIONAL S_Coma EXPRESION_G                                                                { $$ = $1 + $2 + $3; }    
+;
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 FUNC
-    :EXPRESION
+    :EXPRESION_G
     | {$$='';}
 ;
 /*----------------------------------------------------------------------PARAMETROS METODOS----------------------------------------------------------------------*/
@@ -285,13 +277,13 @@ METODOS_LL
 ;
 
 REDUCCION
-    :  S_Igual EXPRESION S_PuntoComa {$$ = $1 +' '+ $2+' '+ $3+"\n";}
+    :  S_Igual EXPRESION_G S_PuntoComa {$$ = $1 +' '+ $2+' '+ $3+"\n";}
     | S_ParentesisAbre PARAMETROS_FUNC S_ParentesisCierra S_PuntoComa
 ;
 
 PARAMETROS_FUNC
-    : PARAMETROS_FUNC S_Coma EXPRESION {$$ = $1 + $2 + $3;}
-    | EXPRESION
+    : PARAMETROS_FUNC S_Coma EXPRESION_G {$$ = $1 + $2 + $3;}
+    | EXPRESION_G
     | {$$='';}
 ;
 /*--------------------------------------------------------------------LLAMADAS FUNCION FUERA METODOS----------------------------------------------------------------------*/
@@ -325,7 +317,7 @@ LISTA_INSTRUCCIONES
 ;
 /*---------------------------------------------PRINT---------------------------------------------------------*/
 IMPRIMIR 
-    : R_System S_Punto R_Out S_Punto TIPO_IMPRESION S_ParentesisAbre EXPRESION S_ParentesisCierra S_PuntoComa {$$ = $1 + $2 + $3 + $4 + $5 + $6 + $7 + $8 + $9;}
+    : R_System S_Punto R_Out S_Punto TIPO_IMPRESION S_ParentesisAbre EXPRESION_G S_ParentesisCierra S_PuntoComa {$$ = $1 + $2 + $3 + $4 + $5 + $6 + $7 + $8 + $9;}
 ;
 
 TIPO_IMPRESION
@@ -345,7 +337,7 @@ SENT_IF
 ;
 
 CONT_IF
-    : S_ParentesisAbre EXPRESION S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra   {$$ = $1+ $2 +$3 + $4 + $5 + $6;}
+    : S_ParentesisAbre EXPRESION_G S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra   {$$ = $1+ $2 +$3 + $4 + $5 + $6;}
 ;
 
 ELSE
@@ -360,7 +352,7 @@ AB
 /*---------------------------------------------SWITCH---------------------------------------------------------*/
 
 SENT_SWITCH
-    : R_Switch S_ParentesisAbre EXPRESION S_ParentesisCierra S_LlaveAbre LISTA_CASE S_LlaveCierra { $$ = $1 + $2 + $3 + $4 + $5 + $6 + $7; }
+    : R_Switch S_ParentesisAbre EXPRESION_G S_ParentesisCierra S_LlaveAbre LISTA_CASE S_LlaveCierra { $$ = $1 + $2 + $3 + $4 + $5 + $6 + $7; }
 ;
 
 LISTA_CASE
@@ -379,7 +371,7 @@ DEF_CASE
 ;
 
 RED_SWITCH
-    : R_Case EXPRESION { $$ = $1 + $2; }
+    : R_Case EXPRESION_G { $$ = $1 + $2; }
     | def
 ;
 
@@ -389,13 +381,13 @@ RED_SWITCH
 ;
 /*--------------------------------------------- DO WHILE---------------------------------------------------------*/
   LOOP_DO_WHILE
-    : R_Do S_LlaveAbre INSTRUCCIONES S_LlaveCierra R_While S_ParentesisAbre EXPRESION S_ParentesisCierra S_PuntoComa { $$ = $1 + $2 + $3 + $4 + $5 + $6 + $7 + $8 + $9; }
+    : R_Do S_LlaveAbre INSTRUCCIONES S_LlaveCierra R_While S_ParentesisAbre EXPRESION_G S_ParentesisCierra S_PuntoComa { $$ = $1 + $2 + $3 + $4 + $5 + $6 + $7 + $8 + $9; }
 ;
 
 /*--------------------------------------------- FOR ---------------------------------------------------------*/
 
 LOOP_FOR
-    : R_For S_ParentesisAbre CONT_FOR EXPRESION S_PuntoComa FIN_FOR S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra { $$ = $1 + $2 + $3 + $4 + $5 + $6 + $7 + $8 + $9 + $10; }
+    : R_For S_ParentesisAbre CONT_FOR EXPRESION_G S_PuntoComa FIN_FOR S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra { $$ = $1 + $2 + $3 + $4 + $5 + $6 + $7 + $8 + $9 + $10; }
 ;
 
 CONT_FOR
@@ -404,12 +396,6 @@ CONT_FOR
 ;
 
 FIN_FOR
-    : Identificador S_Igual EXPRESION                                                  { $$ = $1 + $2 + $3; }
-    | Identificador INCREMENTO                                                         { $$ = $1 + $2; }
-    ;
-
-
-INCREMENTO 
-    : OP_Menos OP_Menos                                                 { $$ = $1 + $2; }
-    | OP_Mas OP_Mas                                                     { $$ = $1 + $2; }
+    : Identificador S_Igual EXPRESION_G                                                { $$ = $1 + $2 + $3; }
+    | EXPRESION_G                                                                      
     ;
