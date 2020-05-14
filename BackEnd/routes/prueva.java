@@ -65,7 +65,7 @@ class hola{
 
     int fun(){}
 
-    int funPar(int a, double b, char c, String d, boolean e){}
+    boolean funPar(int a, double b, char c, String d, boolean e){}
    
 }
 

@@ -1,9 +1,10 @@
 /* descripcion: ANALIZADOR DEL LENGUAJE JAVA */
 // segmento de codigo, importaciones y todo dentro de 
-/*%{
-//declaraciones imports
-%}*/
-
+%{
+    const TIPO = require('./API_MAESTRA').TIPO;
+    const TIPO_OPERACION = require('./API_MAESTRA').TIPO_OPERACION;
+    const API = require('./API').API;
+%}
 /*  Directivas lexicas, expresiones regulares ,Analisis Lexico */
 %lex
 %options flex case-sensitive
@@ -136,73 +137,73 @@
 %%
 INICIO
     : CONTENIDO EOF
-        {console.log("ANALISIS FINALIZADO");}
+        {console.log($1); return $1;}
 ;
 /*----------------------------------------------------------------------LISTADO GENERAL----------------------------------------------------------------------*/
 
 CONTENIDO
-    : CONTENIDO IMPORT {console.log($2);}
-    | IMPORT {console.log($1 + "\n"); }
-    | CONTENIDO MODIFICADORES_ACCESO CLASES {console.log( $2+' '+$3 + "\n");}
-    | MODIFICADORES_ACCESO CLASES {console.log($1+' ' + $2 + "\n");}
+    : CONTENIDO IMPORT {$$ = $1 + $2;}
+    | IMPORT 
+    | CONTENIDO MODIFICADORES_ACCESO CLASES {$$ = $1 + $2 + $3;}
+    | MODIFICADORES_ACCESO CLASES {$$ = $1 + $2 ;}
 ;
 /*----------------------------------------------------------------------IMPORTS----------------------------------------------------------------------*/
 IMPORT
-    : R_Import LISTADO_IMPORT S_PuntoComa {$$ = $1 +' '+ $2+ $3;}
+    : R_Import LISTADO_IMPORT S_PuntoComa {$$ = $1 + $2+ $3;}
 ;
 
 LISTADO_IMPORT
     : LISTADO_IMPORT S_Punto Identificador {$$ = $1 + $2+ $3;}
-    | Identificador {$$ = $1;}
+    | Identificador 
 ;
 
 /*----------------------------------------------------------------------CLASES----------------------------------------------------------------------*/
 CLASES 
-    : R_Class Identificador S_LlaveAbre  LISTA_CLASES S_LlaveCierra {$$ = $1+ $2 + $3+"\n" +$4 +"\n"+$5 ;}
+    : R_Class Identificador S_LlaveAbre  LISTA_CLASES S_LlaveCierra {$$ = $1+ $2 + $3 + $4 + $5;}
 ;
 
 LISTA_CLASES
     : LISTA_CLASES CONTENIDO_CLASE {$$ = $1 + $2;}
-    | CONTENIDO_CLASE {$$ = $1;}    
+    | CONTENIDO_CLASE 
 ;
 
 CONTENIDO_CLASE
-    : TIPO_DATO Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ = $1 +' '+ $2 + $3 +$4 +$5 +$6+"\n" + $7+"\n"+$8;}
-    | VARIABLE {console.log($1+ "\n");}
+    : TIPO_DATO Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ = $1 + $2 + $3 +$4 + $5 + $6 + $7 + $8;}
+    | VARIABLE 
     | R_Void METODO_VOID {$$ = $1 + $2;}
-    | LLAMAR_METODOF_CLASE {console.log($1)}
+    | LLAMAR_METODOF_CLASE 
     
 ;
 
 METODO_VOID
-    : R_Main S_ParentesisAbre S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ = $1 + $2 + $3 +$4 +"\n"+ $5 +"\n"+ $6;}
-    | Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ = $1 + $2 + $3 +$4 + $5 +"\n" + $6+"\n" + $7;}
+    : R_Main S_ParentesisAbre S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ = $1 + $2 + $3 +$4 + $5 + $6;}
+    | Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ = $1 + $2 + $3 +$4 + $5 + $6 + $7;}
 ;
 
 /*----------------------------------------------------------------------VARIABLE----------------------------------------------------------------------*/
 
 VARIABLE
-    : TIPO_DATO LISTADO_ID_VARIABLE S_PuntoComa {$$ = $1 + ' ' + $2+ $3;}
+    : TIPO_DATO LISTADO_ID_VARIABLE S_PuntoComa {$$ = $1 + $2+ $3;}
 ;
 
 LISTADO_ID_VARIABLE
     : LISTADO_ID_VARIABLE S_Coma CONTENIDO_VARIABLE {$$ = $1 + $2+ $3;}
-    | CONTENIDO_VARIABLE {$$ = $1;}
+    | CONTENIDO_VARIABLE 
 ;
 
 CONTENIDO_VARIABLE
     //aqui tengo que agregar la asignacion de variables
     :Identificador S_Igual EXPRESION_G  {$$ = $1 + $2 + $3;}
-    |Identificador {$$ = $1;}
+    |Identificador 
 ;
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------TIPOS_DATO----------------------------------------------------------------------*/
 TIPO_DATO
-    : T_Int {$$ = $1;}
-    | T_String {$$ = $1;}
-    | T_Boolean {$$ = $1;}
-    | T_Char {$$ = $1;}
-    | T_Double  {$$ = $1;}
+    : T_Int             {$$ = TIPO.INT; }
+    | T_String          {$$ = TIPO.STR; }
+    | T_Boolean         {$$ = TIPO.BOO; }
+    | T_Char            {$$ = TIPO.CHA; }
+    | T_Double          {$$ = TIPO.DOU; }
 ;
 
 MODIFICADORES_ACCESO 
@@ -228,10 +229,10 @@ EXPRESION_G
     | EXPRESION_G OP_Division EXPRESION_G                                                        { $$ = $1 + $2 + $3; }   
     | EXPRESION_G OP_Potencia EXPRESION_G                                                        { $$ = $1 + $2 + $3; }
     | EXPRESION_G OP_Modulo EXPRESION_G                                                          { $$ = $1 + $2 + $3; }
-    | CONTENIDO_EXPRESION OP_Decremento %prec PRUEBA
-    | CONTENIDO_EXPRESION OP_Incremento %prec PRUEBA
-    | OP_Menos  CONTENIDO_EXPRESION     %prec UMINUS                                                          { $$ = $1 + $2; }
-    | LOG_Not   CONTENIDO_EXPRESION     %prec UMINUS                                                          { $$ = $1 + $2; }
+    | CONTENIDO_EXPRESION OP_Decremento %prec PRUEBA                                             { $$ = $1 + $2; }
+    | CONTENIDO_EXPRESION OP_Incremento %prec PRUEBA                                             { $$ = $1 + $2; }
+    | OP_Menos  CONTENIDO_EXPRESION     %prec UMINUS                                             { $$ = $1 + $2; }
+    | LOG_Not   CONTENIDO_EXPRESION     %prec UMINUS                                             { $$ = $1 + $2; }
     | CONTENIDO_EXPRESION
 ;
 
@@ -261,24 +262,24 @@ FUNC
 ;
 /*----------------------------------------------------------------------PARAMETROS METODOS----------------------------------------------------------------------*/
 PARAMETROS
-    : TIPO_DATO Identificador LISTA_PARAMETROS {$$ = $1 +" "+ $2 +$3;}
-    | TIPO_DATO Identificador {$$ = $1 +" "+ $2;}
+    : TIPO_DATO Identificador LISTA_PARAMETROS {$$ = $1 + $2 +$3;}
+    | TIPO_DATO Identificador {$$ = $1 + $2;}
     | {$$='';}
 ;
 
 LISTA_PARAMETROS
-    : LISTA_PARAMETROS S_Coma TIPO_DATO Identificador {$$ = $1 + $2 +" " +$3 + $4;}
-    | S_Coma TIPO_DATO Identificador {$$ = $1 +" "+ $2 +$3;}
+    : LISTA_PARAMETROS S_Coma TIPO_DATO Identificador {$$ = $1 + $2 + $3 + $4;}
+    | S_Coma TIPO_DATO Identificador {$$ = $1 + $2 +$3;}
 ;
 /*---------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------LLAMADAS FUNCION DENTRO METODOS----------------------------------------------------------------------*/
 METODOS_LL
-    : Identificador REDUCCION {$$ = $1 + $2 + "\n";}
+    : Identificador REDUCCION {$$ = $1 + $2;}
 ;
 
 REDUCCION
-    :  S_Igual EXPRESION_G S_PuntoComa {$$ = $1 +' '+ $2+' '+ $3+"\n";}
-    | S_ParentesisAbre PARAMETROS_FUNC S_ParentesisCierra S_PuntoComa
+    :  S_Igual EXPRESION_G S_PuntoComa {$$ = $1 +$2+$3;}
+    | S_ParentesisAbre PARAMETROS_FUNC S_ParentesisCierra S_PuntoComa {$$ = $1 + $2+$3+ $4;}
 ;
 
 PARAMETROS_FUNC
@@ -321,8 +322,8 @@ IMPRIMIR
 ;
 
 TIPO_IMPRESION
-    : R_Print {$$ =$1;}
-    | R_Println {$$ =$1;}
+    : R_Print 
+    | R_Println 
 ;
 
 S_TRANSFERENCIA
