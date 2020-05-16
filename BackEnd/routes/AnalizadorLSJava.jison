@@ -3,7 +3,7 @@
 %{
     const TIPO = require('./API_MAESTRA').TIPO;
     const TIPO_OPERACION = require('./API_MAESTRA').TIPO_OPERACION;
-    const API = require('./API').API;
+    const API = require('./API_MAESTRA').API;
 %}
 /*  Directivas lexicas, expresiones regulares ,Analisis Lexico */
 %lex
@@ -16,13 +16,13 @@
 [/][*][^*]*[*]+([^/*][^*]*[*]+)*[/] {/*comentario multilinea*/}
 /*  CADENAS  */
 //yytext = yytext.substr(1,yyleng-2);
-[\"][^\\\"]*([\\][\\\"ntr][^\\\"]*)*[\"]           {  return 'Cadena'; }
+[\"][^\\\"]*([\\][\\\"ntr][^\\\"]*)*[\"]           {yytext = yytext.substr(1,yyleng-2); return 'Cadena'; }
 
 /*  CHAR    */
 //yytext = yytext.substr(1,yyleng-2);
 //yytext = yytext.substr(1,yyleng-2);
-[\'][\\][\"\'nrt\\][\']       {return 'CHAR_Especial';}
-[\'][^\'\\\"][\']             {return 'Char';}
+[\'][\\][\"\'nrt\\][\']       {yytext = yytext.substr(1,yyleng-2); return 'CHAR_Especial';}
+[\'][^\'\\\"][\']             {yytext = yytext.substr(1,yyleng-2); return 'Char';}
 
 
 /*  TIPOS DE DATOS  */
@@ -104,7 +104,7 @@
 
 /*  NUMEROS */
 
-[0-9]+("."[0-9]+)?\b    {return 'Decimal';}
+[0-9]+("."[0-9]+)\b    {return 'Decimal';}
 [0-9]+\b                {return 'Entero';}
 
 /*  IDENTIFICADORES */
@@ -163,8 +163,8 @@ CLASES
 ;
 
 LISTA_CLASES
-    : LISTA_CLASES CONTENIDO_CLASE {$$ = $1 + $2;}
-    | CONTENIDO_CLASE 
+    : LISTA_CLASES CONTENIDO_CLASE {$1.push($2); $$ = $1;}
+    | CONTENIDO_CLASE              {$$ = [$1];}
 ;
 
 CONTENIDO_CLASE
@@ -183,27 +183,27 @@ METODO_VOID
 /*----------------------------------------------------------------------VARIABLE----------------------------------------------------------------------*/
 
 VARIABLE
-    : TIPO_DATO LISTADO_ID_VARIABLE S_PuntoComa {$$ = $1 + $2+ $3;}
+    : TIPO_DATO LISTADO_ID_VARIABLE S_PuntoComa                      {$$ = API.n_Declaracion($1 , $2);}
 ;
 
 LISTADO_ID_VARIABLE
-    : LISTADO_ID_VARIABLE S_Coma CONTENIDO_VARIABLE {$$ = $1 + $2+ $3;}
-    | CONTENIDO_VARIABLE 
+    : LISTADO_ID_VARIABLE S_Coma CONTENIDO_VARIABLE                 {$1.push($3); $$ = $1}
+    | CONTENIDO_VARIABLE                                            {$$ = [$1]}
 ;
 
 CONTENIDO_VARIABLE
     //aqui tengo que agregar la asignacion de variables
-    :Identificador S_Igual EXPRESION_G  {$$ = $1 + $2 + $3;}
-    |Identificador 
+    :Identificador S_Igual EXPRESION_G                              {$$ = API.n_Variable($1,$3)}
+    |Identificador                                                  {$$ = API.n_Variable($1,'undefined')}
 ;
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------TIPOS_DATO----------------------------------------------------------------------*/
 TIPO_DATO
     : T_Int             {$$ = TIPO.INT; }
-    | T_String          {$$ = TIPO.STR; }
-    | T_Boolean         {$$ = TIPO.BOO; }
-    | T_Char            {$$ = TIPO.CHA; }
-    | T_Double          {$$ = TIPO.DOU; }
+    | T_String          {$$ = TIPO.STRING; }
+    | T_Boolean         {$$ = TIPO.BOOLEAN; }
+    | T_Char            {$$ = TIPO.CHAR; }
+    | T_Double          {$$ = TIPO.DOUBLE; }
 ;
 
 MODIFICADORES_ACCESO 
@@ -215,44 +215,44 @@ MODIFICADORES_ACCESO
 /*----------------------------------------------------------------------EXPRESIONES----------------------------------------------------------------------*/
 
 EXPRESION_G 
-    : EXPRESION_G LOG_Concatenar EXPRESION_G                                                     { $$ = $1 + $2 + $3; }
-    | EXPRESION_G LOG_OR EXPRESION_G                                                             { $$ = $1 + $2 + $3; }
-    | EXPRESION_G REL_IgualIgual EXPRESION_G                                                     { $$ = $1 + $2 + $3; }   
-    | EXPRESION_G REL_MayorIgualQue EXPRESION_G                                                  { $$ = $1 + $2 + $3; }
-    | EXPRESION_G REL_MayorQue EXPRESION_G                                                       { $$ = $1 + $2 + $3; }
-    | EXPRESION_G REL_MenorIgualQue EXPRESION_G                                                  { $$ = $1 + $2 + $3; }
-    | EXPRESION_G REL_MenorQue EXPRESION_G                                                       { $$ = $1 + $2 + $3; }
-    | EXPRESION_G REL_Distinto EXPRESION_G                                                       { $$ = $1 + $2 + $3; }       
-    | EXPRESION_G OP_Mas EXPRESION_G                                                             { $$ = $1 + $2 + $3; }
-    | EXPRESION_G OP_Menos EXPRESION_G                                                           { $$ = $1 + $2 + $3; }
-    | EXPRESION_G OP_Multiplicacion EXPRESION_G                                                  { $$ = $1 + $2 + $3; }
-    | EXPRESION_G OP_Division EXPRESION_G                                                        { $$ = $1 + $2 + $3; }   
-    | EXPRESION_G OP_Potencia EXPRESION_G                                                        { $$ = $1 + $2 + $3; }
-    | EXPRESION_G OP_Modulo EXPRESION_G                                                          { $$ = $1 + $2 + $3; }
-    | CONTENIDO_EXPRESION OP_Decremento %prec PRUEBA                                             { $$ = $1 + $2; }
-    | CONTENIDO_EXPRESION OP_Incremento %prec PRUEBA                                             { $$ = $1 + $2; }
-    | OP_Menos  CONTENIDO_EXPRESION     %prec UMINUS                                             { $$ = $1 + $2; }
-    | LOG_Not   CONTENIDO_EXPRESION     %prec UMINUS                                             { $$ = $1 + $2; }
-    | CONTENIDO_EXPRESION
+    : EXPRESION_G LOG_Concatenar EXPRESION_G                                                     { $$ = API.operacion_Binaria($1,$3,TIPO_OPERACION.AND); }//$1 + $2 + $3
+    | EXPRESION_G LOG_OR EXPRESION_G                                                             { $$ = API.operacion_Binaria($1,$3,TIPO_OPERACION.OR); }
+    | EXPRESION_G REL_IgualIgual EXPRESION_G                                                     { $$ = API.operacion_Binaria($1,$3,TIPO_OPERACION.IGUAL_IGUAL); }
+    | EXPRESION_G REL_MayorIgualQue EXPRESION_G                                                  { $$ = API.operacion_Binaria($1,$3,TIPO_OPERACION.MAYOR_IGUAL_QUE); }
+    | EXPRESION_G REL_MayorQue EXPRESION_G                                                       { $$ = API.operacion_Binaria($1,$3,TIPO_OPERACION.MAYOR_QUE); }
+    | EXPRESION_G REL_MenorIgualQue EXPRESION_G                                                  { $$ = API.operacion_Binaria($1,$3,TIPO_OPERACION.MENOR_IGUAL_QUE); }
+    | EXPRESION_G REL_MenorQue EXPRESION_G                                                       { $$ = API.operacion_Binaria($1,$3,TIPO_OPERACION.MENOR_QUE); }
+    | EXPRESION_G REL_Distinto EXPRESION_G                                                       { $$ = API.operacion_Binaria($1,$3,TIPO_OPERACION.DISTINTO); }
+    | EXPRESION_G OP_Mas EXPRESION_G                                                             { $$ = API.operacion_Binaria($1,$3,TIPO_OPERACION.SUMA); }
+    | EXPRESION_G OP_Menos EXPRESION_G                                                           { $$ = API.operacion_Binaria($1,$3,TIPO_OPERACION.RESTA); }
+    | EXPRESION_G OP_Multiplicacion EXPRESION_G                                                  { $$ = API.operacion_Binaria($1,$3,TIPO_OPERACION.MULTIPLICACION); }
+    | EXPRESION_G OP_Division EXPRESION_G                                                        { $$ = API.operacion_Binaria($1,$3,TIPO_OPERACION.DIVISION); }
+    | EXPRESION_G OP_Potencia EXPRESION_G                                                        { $$ = API.operacion_Binaria($1,$3,TIPO_OPERACION.POTENCIA); }
+    | EXPRESION_G OP_Modulo EXPRESION_G                                                          { $$ = API.operacion_Binaria($1,$3,TIPO_OPERACION.MODULO); }
+    | CONTENIDO_EXPRESION OP_Decremento %prec PRUEBA                                             { $$ = API.operacion_Unaria($1,TIPO_OPERACION.MODULO); }
+    | CONTENIDO_EXPRESION OP_Incremento %prec PRUEBA                                             { $$ = API.operacion_Unaria($1,TIPO_OPERACION.DECREMENTO); }
+    | OP_Menos  CONTENIDO_EXPRESION     %prec UMINUS                                             { $$ = API.operacion_Unaria($2,TIPO_OPERACION.NEGATIVO); }
+    | LOG_Not   CONTENIDO_EXPRESION     %prec UMINUS                                             { $$ = API.operacion_Unaria($2,TIPO_OPERACION.NOT); }
+    | CONTENIDO_EXPRESION                                                                        { $$ = $1; }  
 ;
 
  CONTENIDO_EXPRESION
-    : Entero
-    | Decimal
-    | Identificador S_ParentesisAbre S_ParentesisCierra                                          { $$ = $1 + $2 + $3; }
-    | Identificador S_ParentesisAbre OPCIONAL S_ParentesisCierra                                 { $$ = $1 + $2 + $3 + $4; }
-    | R_True
-    | R_False
-    | S_ParentesisAbre EXPRESION_G S_ParentesisCierra                                            { $$ = $1 + $2 + $3; }
-    | Identificador
-    | Cadena
-    | Char    
-    | CHAR_Especial   
+    : Entero                                                                                     {$$ = API.n_Dato($1,TIPO.INT); }
+    | Decimal                                                                                    {$$ = API.n_Dato($1,TIPO.DOUBLE); }
+    | Identificador S_ParentesisAbre S_ParentesisCierra                                          {$$ = API.n_Funcion($1,'undefined');}
+    | Identificador S_ParentesisAbre OPCIONAL S_ParentesisCierra                                 {$$ = API.n_Funcion($1,API.n_Parametro($3));}
+    | R_True                                                                                     {$$ = API.n_Dato($1,TIPO.BOOLEAN); }
+    | R_False                                                                                    {$$ = API.n_Dato($1,TIPO.BOOLEAN); }
+    | S_ParentesisAbre EXPRESION_G S_ParentesisCierra                                            {$$ = $2;}
+    | Identificador                                                                              {$$ = API.n_Dato($1,TIPO.IDENTIFICADOR); }
+    | Cadena                                                                                     {$$ = API.n_Dato($1,TIPO.STRING); }
+    | Char                                                                                       {$$ = API.n_Dato($1,TIPO.CHAR); }
+    | CHAR_Especial                                                                              {$$ = API.n_Dato($1,TIPO.CHAR); }
 ;
 
 OPCIONAL 
-    : EXPRESION_G
-    | OPCIONAL S_Coma EXPRESION_G                                                                { $$ = $1 + $2 + $3; }    
+    : EXPRESION_G                                                                                {$$ = [$1];}
+    | OPCIONAL S_Coma EXPRESION_G                                                                {$1.push($2); $$ = $1;}  
 ;
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
@@ -274,14 +274,15 @@ LISTA_PARAMETROS
 /*---------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------LLAMADAS FUNCION DENTRO METODOS----------------------------------------------------------------------*/
 METODOS_LL
-    : Identificador REDUCCION {$$ = $1 + $2;}
+    : Identificador S_Igual EXPRESION_G S_PuntoComa                                             {$$ = API.n_Asignacion($1,$3);}
+    | Identificador S_ParentesisAbre PARAMETROS_FUNC S_ParentesisCierra S_PuntoComa
 ;
-
+/*
 REDUCCION
     :  S_Igual EXPRESION_G S_PuntoComa {$$ = $1 +$2+$3;}
     | S_ParentesisAbre PARAMETROS_FUNC S_ParentesisCierra S_PuntoComa {$$ = $1 + $2+$3+ $4;}
 ;
-
+*/
 PARAMETROS_FUNC
     : PARAMETROS_FUNC S_Coma EXPRESION_G {$$ = $1 + $2 + $3;}
     | EXPRESION_G
@@ -296,13 +297,13 @@ LLAMAR_METODOF_CLASE
 
 /*--------------------------------------------------------------------INSTRUCCIONES CONTENIDO METODOS----------------------------------------------------------------------*/
 INSTRUCCIONES
-    : LISTA_INS
+    : LISTA_INS                     {console.log(JSON.stringify($1, null, 2));}
     | {$$='';}
 ;
 
 LISTA_INS
-    : LISTA_INS LISTA_INSTRUCCIONES {$$ = $1 + $2;}
-    | LISTA_INSTRUCCIONES
+    : LISTA_INS LISTA_INSTRUCCIONES {$1.push($2); $$ = $1;}
+    | LISTA_INSTRUCCIONES           {$$ = [$1];}
 ;
 
 LISTA_INSTRUCCIONES
@@ -318,7 +319,7 @@ LISTA_INSTRUCCIONES
 ;
 /*---------------------------------------------PRINT---------------------------------------------------------*/
 IMPRIMIR 
-    : R_System S_Punto R_Out S_Punto TIPO_IMPRESION S_ParentesisAbre EXPRESION_G S_ParentesisCierra S_PuntoComa {$$ = $1 + $2 + $3 + $4 + $5 + $6 + $7 + $8 + $9;}
+    : R_System S_Punto R_Out S_Punto TIPO_IMPRESION S_ParentesisAbre EXPRESION_G S_ParentesisCierra S_PuntoComa {$$ = API.n_Impresion($5,$7);}/*$1 + $2 + $3 + $4 + $5 + $6 + $7 + $8 + $9*/
 ;
 
 TIPO_IMPRESION
@@ -378,7 +379,7 @@ RED_SWITCH
 
 /*---------------------------------------------WHILE---------------------------------------------------------*/
   LOOP_WHILE
-    : R_While CONT_IF { $$ = $1 + $2; }
+    : R_While S_ParentesisAbre EXPRESION_G S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra   {$$ = API.n_While($3,$6);}/*$1+ $2 +$3 + $4 + $5 + $6 + $7;*/
 ;
 /*--------------------------------------------- DO WHILE---------------------------------------------------------*/
   LOOP_DO_WHILE
@@ -388,15 +389,15 @@ RED_SWITCH
 /*--------------------------------------------- FOR ---------------------------------------------------------*/
 
 LOOP_FOR
-    : R_For S_ParentesisAbre CONT_FOR EXPRESION_G S_PuntoComa FIN_FOR S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra { $$ = $1 + $2 + $3 + $4 + $5 + $6 + $7 + $8 + $9 + $10; }
+    : R_For S_ParentesisAbre CONT_FOR S_PuntoComa EXPRESION_G S_PuntoComa FIN_FOR S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra { $$ = API.n_For( $3 , $5 , $7 , $10); } /*$1 + $2 + $3 + $4 + $5 + $6 + $7 + $8 + $9 + $10*/
 ;
-
+                                                                                                                                            //inicio, condicion, fin, instrucciones
 CONT_FOR
-    : VARIABLE
-    | METODOS_LL
+    : TIPO_DATO Identificador S_Igual EXPRESION_G        {$$ = API.n_Declaracion($1 , API.n_Variable($2,$4));}
+    | Identificador S_Igual EXPRESION_G                  {$$ = API.n_Asignacion($1,$3);}
 ;
 
 FIN_FOR
-    : Identificador S_Igual EXPRESION_G                                                { $$ = $1 + $2 + $3; }
+    : Identificador S_Igual EXPRESION_G                  {$$ = API.n_Asignacion($1,$3);}
     | EXPRESION_G                                                                      
     ;

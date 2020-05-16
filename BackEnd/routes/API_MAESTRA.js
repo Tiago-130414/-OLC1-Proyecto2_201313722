@@ -1,11 +1,11 @@
 const TIPO = {
-    INT:             'Entero',
-    DOU:             'Decimal',
-    CHA:             'Caracter',
-    BOO:             'Logico',
-    STR:             'Cadena',
-    IDE:             'Ident',
-    FUNC:            'Funcion'
+    INT:                'Entero',
+    DOUBLE:             'Decimal',
+    CHAR:               'Caracter',
+    BOOLEAN:            'Logico',
+    STRING:             'Cadena',
+    IDENTIFICADOR:      'Ident',
+    FUNCION:            'Funcion'
 }
 
 const TIPO_OPERACION = {
@@ -56,9 +56,9 @@ const TIPO_INSTRUCCION = {
 //creando operacion
 function generarOperacion(operador_Izquierdo, operador_Derecho, tipo_Operacion) {
 	return {
-		operador_Izquierdo: operador_Izquierdo,
-		operador_Derecho: operador_Derecho,
-		tipo_Operacion: tipo_Operacion
+		Operador_Izquierdo: operador_Izquierdo,
+		Operador_Derecho: operador_Derecho,
+		Tipo_Operacion: tipo_Operacion
 	}
 }
 
@@ -73,21 +73,76 @@ const API ={
     },
 
     // guarda los valores cadena,entero,booleano,identificadores,numeros y decimales
-    n_Dato: function(dato, tipo_Operacion) {
+    n_Dato: function(dato, tipo_Dato) {
 		return {
-			tipo_Operacion: tipo_Operacion,
-			dato: dato
+			Tipo_Dato: tipo_Dato,
+			Dato: dato
 		}
     },
     
     // impresion en consola
-
     n_Impresion: function(tipo_Imprimir,expresion_Cad) {
 		return {
-			tipo_Operacion: tipo_Imprimir,
-			expresion_Cad: expresion_Cad
+			Tipo_Operacion: tipo_Imprimir,
+			Expresion_Cad: expresion_Cad
 		};
+  },
+
+  n_Declaracion: function(tipo, lista_variables) {
+		return {
+			Tipo: TIPO_INSTRUCCION.DECLARACION,
+      Tipo_dato: tipo,
+      Definicion_variables: lista_variables
+		}
+  },
+
+  n_Variable: function(identificador, valor_variable) {
+		return {
+      Identificador: identificador,
+			Valor_variable: valor_variable
+		}
+  },
+
+  n_Asignacion: function(identificador, expresion) {
+		return {
+			Tipo: TIPO_INSTRUCCION.ASIGNACION,
+			Identificador: identificador,
+			Valor_variable: expresion
+		}
 	},
+  
+  // ciclo while
+  n_While: function(expresion, instrucciones) {
+		return {
+			Tipo: TIPO_INSTRUCCION.WHILE,
+			Expresion: expresion,
+			Instrucciones: instrucciones
+		};
+  },
+  
+  n_For: function (inicio, condicion, fin, instrucciones) {
+		return {
+      Tipo: TIPO_INSTRUCCION.FOR,
+      Inicio_for:     inicio,
+      Condicion_for:  condicion,
+      Incremento:     fin,
+      Instrucciones:  instrucciones
+		}
+  },
+
+  n_Funcion : function(identificador,parametro){
+      return{
+        Tipo: TIPO.FUNCION,
+        Identificador: identificador,
+        Parametro: parametro
+      }
+  },
+  
+  n_Parametro : function (parametro) {
+		return {
+      Parametro: parametro
+		}
+  },
 
 }
 
