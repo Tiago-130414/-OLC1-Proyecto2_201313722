@@ -144,6 +144,79 @@ const API ={
 		}
   },
 
+  n_If: function(expresion, instrucciones) {
+		return {
+			Tipo: TIPO_INSTRUCCION.IF,
+			Expresion: expresion,
+			Instrucciones: instrucciones
+		}
+  },
+  
+  n_ElseIf: function(expresion, instrucciones) {
+		return {
+			Tipo: TIPO_INSTRUCCION.ELSE_IF,
+			Expresion: expresion,
+			Instrucciones: instrucciones
+		}
+  },
+  
+  n_Else: function(instrucciones) {
+		return {
+			Tipo: TIPO_INSTRUCCION.ELSE,
+			Instrucciones: instrucciones
+		}
+  },
+  
+  n_Switch: function(expresion, instrucciones) {
+		return {
+			Tipo: TIPO_INSTRUCCION.SWITCH,
+			Expresion: expresion,
+			Instrucciones: instrucciones
+		}
+  },
+
+  n_Case: function(expresion, instrucciones) {
+		return {
+			Tipo: TIPO_INSTRUCCION.CASE,
+			Expresion: expresion,
+			Instrucciones: instrucciones
+		}
+  },
+
+  n_Default: function(instrucciones) {
+		return {
+			Tipo: TIPO_INSTRUCCION.CASE,
+			Instrucciones: instrucciones
+		}
+  },
+
+  n_DoWhile: function(instrucciones, expresion) {
+		return {
+			Tipo: TIPO_INSTRUCCION.DO_WHILE,
+      Instrucciones: instrucciones,
+      Expresion: expresion
+		}
+  },
+
+  n_Continue: function() {
+		return {
+			Tipo: TIPO_INSTRUCCION.CONTINUE
+		}
+  },
+
+  n_Return: function(expresion) {
+		return {
+			Tipo: TIPO_INSTRUCCION.RETURN,
+      Expresion: expresion
+		}
+  },
+
+  n_Break: function() {
+		return {
+			Tipo: TIPO_INSTRUCCION.BREAK
+		}
+  },
+
 }
 
 

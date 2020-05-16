@@ -210,7 +210,7 @@ MODIFICADORES_ACCESO
     : R_Protected {$$ = $1;}
     | R_Public {$$ = $1;}
     | R_Private {$$ = $1;}
-    | {$$='';}
+    | { $$ = 'undefined'; }
 ;
 /*----------------------------------------------------------------------EXPRESIONES----------------------------------------------------------------------*/
 
@@ -257,8 +257,8 @@ OPCIONAL
 
 /*------------------------------------------------------------------------------------------------------------------------------------------------------*/
 FUNC
-    :EXPRESION_G
-    | {$$='';}
+    :EXPRESION_G                    {$$ = $1;}
+    |                               {$$='undefined';}
 ;
 /*----------------------------------------------------------------------PARAMETROS METODOS----------------------------------------------------------------------*/
 PARAMETROS
@@ -275,7 +275,7 @@ LISTA_PARAMETROS
 /*--------------------------------------------------------------------LLAMADAS FUNCION DENTRO METODOS----------------------------------------------------------------------*/
 METODOS_LL
     : Identificador S_Igual EXPRESION_G S_PuntoComa                                             {$$ = API.n_Asignacion($1,$3);}
-    | Identificador S_ParentesisAbre PARAMETROS_FUNC S_ParentesisCierra S_PuntoComa
+    | Identificador S_ParentesisAbre PARAMETROS_FUNC S_ParentesisCierra S_PuntoComa             {$$ = API.n_Funcion($1,API.n_Parametro($3));}
 ;
 /*
 REDUCCION
@@ -303,17 +303,17 @@ INSTRUCCIONES
 
 LISTA_INS
     : LISTA_INS LISTA_INSTRUCCIONES {$1.push($2); $$ = $1;}
-    | LISTA_INSTRUCCIONES           {$$ = [$1];}
+    | LISTA_INSTRUCCIONES           {if(Array.isArray($1)){$$ = $1; }else{$$ = [$1];}}
 ;
 
 LISTA_INSTRUCCIONES
-    : METODOS_LL
-    | VARIABLE 
-    | IMPRIMIR 
-    | SENT_IF
-    | LOOP_WHILE
+    : METODOS_LL //ya esta
+    | VARIABLE  //ya esta
+    | IMPRIMIR  //ya esta
+    | SENT_IF   //ya esta
+    | LOOP_WHILE    //ya esta
     | LOOP_DO_WHILE
-    | LOOP_FOR
+    | LOOP_FOR  //ya esta
     | SENT_SWITCH
     | S_TRANSFERENCIA
 ;
@@ -328,53 +328,141 @@ TIPO_IMPRESION
 ;
 
 S_TRANSFERENCIA
-    : R_Break S_PuntoComa { $$ = $1 + $2; }
-    | R_Continue S_PuntoComa { $$ = $1 + $2; }
-    | R_Return FUNC S_PuntoComa { $$ = $1 + $2 + $3; }
+    : R_Break S_PuntoComa { $$ = API.n_Break(); }
+    | R_Continue S_PuntoComa { $$ = API.n_Continue(); }
+    | R_Return FUNC S_PuntoComa { $$ = API.n_Return($2); }
 ;
 
 /*---------------------------------------------IF---------------------------------------------------------*/
 SENT_IF
-    : R_If CONT_IF ELSE  { $$ = $1+ $2 +$3; }
+//: IF_FIJO DEF_IF  { $1.push($2); $$ = $1; }//$1+ $2 +$3
+//$2.unshift($1);$$ = $2;    
+    : IF_FIJO DEF_IF  { 
+        var obj_if = []; 
+        if($2 !=null){
+            if(Array.isArray($1) && !Array.isArray($2)){
+                $1.push($2); 
+                $$ = $1;
+            }else if(Array.isArray($2) && !Array.isArray($1)){
+                $2.unshift($1); 
+                $$ = $2;
+            } else{
+                obj_if.push($2);
+                obj_if.unshift($1);
+                $$ = obj_if;
+            }
+        }else{
+            $$ = $1;
+        }
+    }
 ;
 
-CONT_IF
-    : S_ParentesisAbre EXPRESION_G S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra   {$$ = $1+ $2 +$3 + $4 + $5 + $6;}
+IF_FIJO
+    : R_If S_ParentesisAbre EXPRESION_G S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ = API.n_If($3,$6);}
 ;
 
-ELSE
-    : R_Else AB { $$ = $1 + $2; }
-    | { $$ = ''; }
+DEF_IF
+    : LISTADO_ELSI ELSE_FIJO { 
+        var obj_if = []; 
+        if(Array.isArray($1) && !Array.isArray($2)){
+            $1.push($2); 
+            $$ = $1;
+        }else if(Array.isArray($2) && !Array.isArray($1)){
+            $2.unshift($1); 
+            $$ = $2;
+        } else{
+            obj_if.push($2);
+            obj_if.unshift($1);
+            $$ = obj_if;
+        }
+    }
+    | LISTADO_ELSI           {  
+        var obj_if = []; 
+        if(Array.isArray($1)){ 
+            $$ =$1;
+        } else{ 
+            obj_if.push($1);
+            $$ = obj_if;
+        }
+    }
+    | ELSE_FIJO              { 
+        var obj_if = []; 
+        if(Array.isArray($1)){ 
+            $$ =$1;
+        } else{ 
+            obj_if.push($1);
+            $$ = obj_if;
+        } 
+    }
+    |
 ;
 
-AB
-    : S_LlaveAbre INSTRUCCIONES S_LlaveCierra { $$ = $1 + $2 + $3; }
-    | SENT_IF 
+LISTADO_ELSI
+    : LISTADO_ELSI ELSE_IF      { $1.push($2); $$ = $1;  }
+    | ELSE_IF                   { $$ = [$1];  }
+;
+
+ELSE_FIJO
+    : R_Else S_LlaveAbre INSTRUCCIONES S_LlaveCierra { $$ = API.n_Else($3);  }
+;
+
+ELSE_IF
+    : R_Else R_If S_ParentesisAbre EXPRESION_G S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra { $$ = API.n_ElseIf($4,$7); }
 ;
 /*---------------------------------------------SWITCH---------------------------------------------------------*/
 
 SENT_SWITCH
-    : R_Switch S_ParentesisAbre EXPRESION_G S_ParentesisCierra S_LlaveAbre LISTA_CASE S_LlaveCierra { $$ = $1 + $2 + $3 + $4 + $5 + $6 + $7; }
+    : R_Switch S_ParentesisAbre EXPRESION_G S_ParentesisCierra S_LlaveAbre LISTA_CASE S_LlaveCierra {$$ = API.n_Switch($3,$6); }
 ;
 
 LISTA_CASE
-    : LS_CASE
-    | { $$= ''; }
+    : LS_CASE RED_SWITCH{ 
+        var obj_if = []; 
+        if(Array.isArray($1) && !Array.isArray($2)){
+            $1.push($2); 
+            $$ = $1;
+        }else if(Array.isArray($2) && !Array.isArray($1)){
+            $2.unshift($1); 
+            $$ = $2;
+        } else{
+            obj_if.push($2);
+            obj_if.unshift($1);
+            $$ = obj_if;
+        }
+    }
+    | LS_CASE{  
+        var obj_if = []; 
+        if(Array.isArray($1)){ 
+            $$ =$1;
+        } else{ 
+            obj_if.push($1);
+            $$ = obj_if;
+        }
+    }
+    | RED_SWITCH{ 
+        var obj_if = []; 
+        if(Array.isArray($1)){ 
+            $$ =$1;
+        } else{ 
+            obj_if.push($1);
+            $$ = obj_if;
+        } 
+    }
+    |
 ;
 
 
 LS_CASE
-    : LS_CASE DEF_CASE { $$ = $1 + $2; }
-    | DEF_CASE
+    : LS_CASE DEF_CASE { $1.push($2); $$ = $1;  }
+    | DEF_CASE         { $$ = [$1];  }
 ;
 
 DEF_CASE
-    : RED_SWITCH S_DosPuntos INSTRUCCIONES { $$ = $1 + $2 + $3; }
+    : R_Case EXPRESION_G S_DosPuntos INSTRUCCIONES {$$ = API.n_Case($2,$4);}
 ;
 
 RED_SWITCH
-    : R_Case EXPRESION_G { $$ = $1 + $2; }
-    | def
+    : def S_DosPuntos INSTRUCCIONES     {$$ = API.n_Default($3);}
 ;
 
 /*---------------------------------------------WHILE---------------------------------------------------------*/
@@ -383,7 +471,7 @@ RED_SWITCH
 ;
 /*--------------------------------------------- DO WHILE---------------------------------------------------------*/
   LOOP_DO_WHILE
-    : R_Do S_LlaveAbre INSTRUCCIONES S_LlaveCierra R_While S_ParentesisAbre EXPRESION_G S_ParentesisCierra S_PuntoComa { $$ = $1 + $2 + $3 + $4 + $5 + $6 + $7 + $8 + $9; }
+    : R_Do S_LlaveAbre INSTRUCCIONES S_LlaveCierra R_While S_ParentesisAbre EXPRESION_G S_ParentesisCierra S_PuntoComa { $$ = API.n_DoWhile($3,$7); }
 ;
 
 /*--------------------------------------------- FOR ---------------------------------------------------------*/
