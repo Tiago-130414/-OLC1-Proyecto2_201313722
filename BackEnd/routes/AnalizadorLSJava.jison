@@ -137,29 +137,46 @@
 %%
 INICIO
     : CONTENIDO EOF
-        {console.log($1); return $1;}
+        {console.log(JSON.stringify($1, null, 2)); return $1;}
 ;
 /*----------------------------------------------------------------------LISTADO GENERAL----------------------------------------------------------------------*/
 
 CONTENIDO
-    : CONTENIDO IMPORT {$$ = $1 + $2;}
-    | IMPORT 
-    | CONTENIDO MODIFICADORES_ACCESO CLASES {$$ = $1 + $2 + $3;}
-    | MODIFICADORES_ACCESO CLASES {$$ = $1 + $2 ;}
+    : CONTENIDO IMPORT {$1.push($2); $$ = $1;}
+    | IMPORT {$$ = [$1];}
+    | CONTENIDO CLASES {$1.push($2); $$ = $1;}
+    | CLASES {$$ = [$1];}
 ;
 /*----------------------------------------------------------------------IMPORTS----------------------------------------------------------------------*/
 IMPORT
-    : R_Import LISTADO_IMPORT S_PuntoComa {$$ = $1 + $2+ $3;}
+    : R_Import LISTADO_IMPORT S_PuntoComa {$$ = API.n_Import($2);}
 ;
 
 LISTADO_IMPORT
-    : LISTADO_IMPORT S_Punto Identificador {$$ = $1 + $2+ $3;}
-    | Identificador 
+    : LISTADO_IMPORT S_Punto DEFINE_IMPORT {
+        var obj_if = []; 
+        if(Array.isArray($3) && !Array.isArray($1)){
+            $3.unshift($1); 
+            $$ = $3;
+        }else if(Array.isArray($1) && !Array.isArray($3)){
+            $1.push($3); 
+            $$ = $1;
+        } else{
+            obj_if.push($3);
+            obj_if.unshift($1);
+            $$ = obj_if;
+        } 
+    }
+    | DEFINE_IMPORT                         {$$ = [$1];}
+;
+
+DEFINE_IMPORT
+    : Identificador {$$ = API.n_Ident($1);} //
 ;
 
 /*----------------------------------------------------------------------CLASES----------------------------------------------------------------------*/
 CLASES 
-    : R_Class Identificador S_LlaveAbre  LISTA_CLASES S_LlaveCierra {$$ = $1+ $2 + $3 + $4 + $5;}
+    : R_Class Identificador S_LlaveAbre  LISTA_CLASES S_LlaveCierra {$$ = API.n_Clase($2,$4);} //{$$ = $1+ $2 + $3 + $4 + $5;}{console.log(JSON.stringify($1, null, 2));
 ;
 
 LISTA_CLASES
@@ -168,16 +185,16 @@ LISTA_CLASES
 ;
 
 CONTENIDO_CLASE
-    : TIPO_DATO Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ = $1 + $2 + $3 +$4 + $5 + $6 + $7 + $8;}
-    | VARIABLE 
-    | R_Void METODO_VOID {$$ = $1 + $2;}
-    | LLAMAR_METODOF_CLASE 
+    : TIPO_DATO Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ =API.n_Metodo_Funcion($1,$2,$4,$7);}//$1 + $2 + $3 +$4 + $5 + $6 + $7 + $8
+    | VARIABLE {$$=1;}
+    | R_Void METODO_VOID {$$ =$2;}
+    | LLAMAR_METODOF_CLASE {$$=1;} 
     
 ;
 
 METODO_VOID
-    : R_Main S_ParentesisAbre S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ = $1 + $2 + $3 +$4 + $5 + $6;}
-    | Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ = $1 + $2 + $3 +$4 + $5 + $6 + $7;}
+    : R_Main S_ParentesisAbre S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ = API.n_Metodo_Principal($5);}
+    | Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ = API.n_Metodo($1,$3,$6);}
 ;
 
 /*----------------------------------------------------------------------VARIABLE----------------------------------------------------------------------*/
@@ -262,14 +279,30 @@ FUNC
 ;
 /*----------------------------------------------------------------------PARAMETROS METODOS----------------------------------------------------------------------*/
 PARAMETROS
-    : TIPO_DATO Identificador LISTA_PARAMETROS {$$ = $1 + $2 +$3;}
-    | TIPO_DATO Identificador {$$ = $1 + $2;}
+    : DEFINIR_PARAMETRO LISTA_PARAMETROS {
+        var obj_if = []; 
+        if(Array.isArray($2) && !Array.isArray($1)){
+            $2.unshift($1); 
+            $$ = $2;
+        }else if(Array.isArray($1) && !Array.isArray($2)){
+            $1.push($2); 
+            $$ = $1;
+        } else{
+                obj_if.push($2);
+                obj_if.unshift($1);
+                $$ = obj_if;
+        } 
+    } // $$ = $1 + $2 +$3;
+    | DEFINIR_PARAMETRO {$$ = [$1];}
     | {$$='';}
 ;
-
 LISTA_PARAMETROS
-    : LISTA_PARAMETROS S_Coma TIPO_DATO Identificador {$$ = $1 + $2 + $3 + $4;}
-    | S_Coma TIPO_DATO Identificador {$$ = $1 + $2 +$3;}
+    : LISTA_PARAMETROS S_Coma DEFINIR_PARAMETRO {$1.push($3); $$ = $1;}
+    | S_Coma DEFINIR_PARAMETRO {$$ =[$2];}
+;
+
+DEFINIR_PARAMETRO
+    : TIPO_DATO Identificador {$$ = API.n_ParametroM($1,$2);}
 ;
 /*---------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------LLAMADAS FUNCION DENTRO METODOS----------------------------------------------------------------------*/
@@ -284,8 +317,8 @@ REDUCCION
 ;
 */
 PARAMETROS_FUNC
-    : PARAMETROS_FUNC S_Coma EXPRESION_G {$$ = $1 + $2 + $3;}
-    | EXPRESION_G
+    : PARAMETROS_FUNC S_Coma EXPRESION_G { $1.push($3);  $$ = $1;}
+    | EXPRESION_G                        {$$ = [$1];}
     | {$$='';}
 ;
 /*--------------------------------------------------------------------LLAMADAS FUNCION FUERA METODOS----------------------------------------------------------------------*/
@@ -297,7 +330,7 @@ LLAMAR_METODOF_CLASE
 
 /*--------------------------------------------------------------------INSTRUCCIONES CONTENIDO METODOS----------------------------------------------------------------------*/
 INSTRUCCIONES
-    : LISTA_INS                     {console.log(JSON.stringify($1, null, 2));}
+    : LISTA_INS                     {$$ = $1;}
     | {$$='';}
 ;
 
@@ -312,10 +345,11 @@ LISTA_INSTRUCCIONES
     | IMPRIMIR  //ya esta
     | SENT_IF   //ya esta
     | LOOP_WHILE    //ya esta
-    | LOOP_DO_WHILE
+    | LOOP_DO_WHILE //ya esta
     | LOOP_FOR  //ya esta
-    | SENT_SWITCH
-    | S_TRANSFERENCIA
+    | SENT_SWITCH // ya esta
+    | S_TRANSFERENCIA //ya esta
+    | error S_PuntoComa {console.error("Error Sintactico: " + yytext +" Fila: " + yylineno);}
 ;
 /*---------------------------------------------PRINT---------------------------------------------------------*/
 IMPRIMIR 

@@ -4,53 +4,57 @@ const TIPO = {
     CHAR:               'Caracter',
     BOOLEAN:            'Logico',
     STRING:             'Cadena',
-    IDENTIFICADOR:      'Ident',
+    IDENTIFICADOR:      'Identificador',
     FUNCION:            'Funcion'
 }
 
 const TIPO_OPERACION = {
 // OPERACIONES ARITMETICAS    
-    SUMA:               'Op_Suma',
-    RESTA:              'Op_Resta',
-    MULTIPLICACION:     'Op_Multiplicacion',
-    DIVISION:           'Op_Division',
-    POTENCIA:           'Op_Potencia',
-    MODULO:             'Op_Modulo',
-    NEGATIVO:           'Op_Negativo',
-    INCREMENTO:         'Op_Incremento',
-    DECREMENTO:         'Op_Decremento',
+    SUMA:               'Operacion_Suma',
+    RESTA:              'Operacion_Resta',
+    MULTIPLICACION:     'Operacion_Multiplicacion',
+    DIVISION:           'Operacion_Division',
+    POTENCIA:           'Operacion_Potencia',
+    MODULO:             'Operacion_Modulo',
+    NEGATIVO:           'Operacion_Negativo',
+    INCREMENTO:         'Operacion_Incremento',
+    DECREMENTO:         'Operacion_Decremento',
 // OPERACIONES RELACIONALES
-    MAYOR_IGUAL_QUE:   'Op_MayorIgualQue',
-    MENOR_IGUAL_QUE:   'Op_MenorIgualQue',
-    IGUAL_IGUAL:       'Op_IgualIgual',
-    DISTINTO:          'Op_Distinto',
-    MENOR_QUE:         'Op_MenorQue',
-    MAYOR_QUE:         'Op_MayorQue',
+    MAYOR_IGUAL_QUE:   'Operacion_MayorIgualQue',
+    MENOR_IGUAL_QUE:   'Operacion_MenorIgualQue',
+    IGUAL_IGUAL:       'Operacion_IgualIgual',
+    DISTINTO:          'Operacion_Distinto',
+    MENOR_QUE:         'Operacion_MenorQue',
+    MAYOR_QUE:         'Operacion_MayorQue',
 // OPERADORES RELACIONALES
-    NOT:               'Op_Not',
-    AND:               'Op_And',
-    OR:                'Op_Or'
+    NOT:               'Operacion_Not',
+    AND:               'Operacion_And',
+    OR:                'Operacion_Or'
 }
 
 const TIPO_INSTRUCCION = {
-    IMPRIMIR:       'Ins_Imprimir',
-    IMPRIMIR_LN:    'Ins_ImprimirLN', 
-    IF:             'Ins_If',
-    ELSE_IF:        'Ins_ElseIf',
-    ELSE:           'Ins_Else',
-    SWITCH:         'Ins_Switch',
-    DO_WHILE:       'Ins_Do',
-    WHILE:          'Ins_While',
-    FOR:            'Ins_For',
-    DECLARACION:    'Ins_Declaracion',
-    ASIGNACION:     'Ins_Asignacion',
-    IMPORT:         'Ins_Import',
-    CLASE:          'Ins_clase',
-    DEFAULT:        'Ins_Default',
-    CASE:           'Ins_Case',
-    BREAK:          'Ins_Break', 
-    CONTINUE:       'Ins_Continue',
-    RETURN:         'Ins_Return'
+    IMPRIMIR:       'Instruccion_Imprimir',
+    IMPRIMIR_LN:    'Instruccion_ImprimirLN', 
+    IF:             'Instruccion_If',
+    ELSE_IF:        'Instruccion_ElseIf',
+    ELSE:           'Instruccion_Else',
+    SWITCH:         'Instruccion_Switch',
+    DO_WHILE:       'Instruccion_Do',
+    WHILE:          'Instruccion_While',
+    FOR:            'Instruccion_For',
+    DECLARACION:    'Instruccion_Declaracion',
+    ASIGNACION:     'Instruccion_Asignacion',
+    IMPORT:         'Instruccion_Import',
+    CLASE:          'Instruccion_clase',
+    DEFAULT:        'Instruccion_Default',
+    CASE:           'Instruccion_Case',
+    BREAK:          'Instruccion_Break', 
+    CONTINUE:       'Instruccion_Continue',
+    RETURN:         'Instruccion_Return',
+    MAIN:           'Instruccion_Main',
+    METODO:         'Instruccion_Metodo',
+    METODO_FUNCION: 'Instruccion_Metodo_Funcion'
+  
 }
 
 //creando operacion
@@ -140,7 +144,7 @@ const API ={
   
   n_Parametro : function (parametro) {
 		return {
-      Parametro: parametro
+      Definicion_Parametro: parametro
 		}
   },
 
@@ -190,6 +194,7 @@ const API ={
 		}
   },
 
+  //ciclo do while
   n_DoWhile: function(instrucciones, expresion) {
 		return {
 			Tipo: TIPO_INSTRUCCION.DO_WHILE,
@@ -198,12 +203,14 @@ const API ={
 		}
   },
 
+  //continue
   n_Continue: function() {
 		return {
 			Tipo: TIPO_INSTRUCCION.CONTINUE
 		}
   },
 
+  //return
   n_Return: function(expresion) {
 		return {
 			Tipo: TIPO_INSTRUCCION.RETURN,
@@ -211,13 +218,73 @@ const API ={
 		}
   },
 
+  //break
   n_Break: function() {
 		return {
 			Tipo: TIPO_INSTRUCCION.BREAK
 		}
   },
 
+  // metodos que no retornan valores
+  n_Metodo : function(identificador, parametro, instrucciones){
+    return {
+      Tipo: TIPO_INSTRUCCION.METODO,
+      Identificador: identificador,
+      Parametro: parametro,
+      Instrucciones: instrucciones
+    }
+  },
+
+  // funciones que retornan valor
+  n_Metodo_Funcion : function(tipo_funcion,identificador, parametro,instrucciones){
+    return {
+      Tipo: TIPO_INSTRUCCION.METODO_FUNCION,
+      Tipo_Retorno: tipo_funcion,
+      Identificador: identificador,
+      Parametros:  parametro,
+      Instrucciones: instrucciones
+    }
+  },
+
+  //metodo principal
+  n_Metodo_Principal : function(instrucciones){
+    return{
+      Tipo: TIPO_INSTRUCCION.MAIN,
+      Instrucciones: instrucciones
+    }
+  },
+
+  //declaracion de parametros en metodos
+  n_ParametroM : function(tipo_parametro, identificador){
+    return{
+      Tipo: tipo_parametro,
+      Identificador: identificador
+    }
+  },
+
+  n_Clase : function(identificador, instrucciones){
+    return{
+      Tipo: TIPO_INSTRUCCION.CLASE,
+      Identificador: identificador,
+      Instrucciones: instrucciones
+    }
+  },
+
+  n_Import : function(identificador){
+    return{
+      Tipo: TIPO_INSTRUCCION.IMPORT,
+      Identificador: identificador
+    }
+  },
+
+  n_Ident : function(identificador){
+    return{
+      Tipo: TIPO.IDENTIFICADOR,
+      Identificador: identificador
+    }
+  },
 }
+
 
 
 module.exports.TIPO = TIPO;
