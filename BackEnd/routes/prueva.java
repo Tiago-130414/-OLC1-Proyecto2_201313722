@@ -2,7 +2,7 @@ class hola1{
     void main (){ 
         switch(a<b){
             case a:
-                System.Out.println("caca1");
+                System.out.println("caca1");
                 break;
             default:
                 System.out.println("caca4");

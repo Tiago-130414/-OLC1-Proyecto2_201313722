@@ -8,8 +8,7 @@ var TextoAnalizar2 =" ";
 
 router.get("/", (req, res) => {
   var Arbolito = AnalizadorJava.parse(TextoAnalizar1);
-  res.json({ ArbolAst : 'analizado' });
-  //res.json({ "Title": "Hello World" });
+  res.json(Arbolito);
 });
 
 router.post("/",(req,res)=>{

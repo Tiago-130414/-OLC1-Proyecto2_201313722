@@ -30,7 +30,9 @@ function recuperarArbol() {
       return response.json();
     })
     .then(function (myJson) {
-      txt.innerHTML = myJson.ArbolAst;
-      console.log(myJson.ArbolAst);
+       var json = JSON.stringify(myJson, null, 1);
+
+       createJSTree(obj);
+      txt.innerHTML = json;
     });
 }
