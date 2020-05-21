@@ -1,9 +1,51 @@
 /* descripcion: ANALIZADOR DEL LENGUAJE JAVA */
 // segmento de codigo, importaciones y todo dentro de 
 %{
-    const TIPO = require('./API_MAESTRA').TIPO;
-    const TIPO_OPERACION = require('./API_MAESTRA').TIPO_OPERACION;
-    const API = require('./API_MAESTRA').API;
+    const TIPO = require('./Api_AnalizadorJavaAst').TIPO;
+    const TIPO_OPERACION = require('./Api_AnalizadorJavaAst').TIPO_OPERACION;
+    const API = require('./Api_AnalizadorJavaAst').API;
+// variables para todos los reportes
+    let ArchivoJson = [];
+    let tipo_d = '';
+    let claseT = [];
+    let metodosT = [];
+    let varA = [];
+    let identVar = [];
+    let parametroT = [];
+
+
+// variables de errores 
+    let erroresLexicos = [];
+    let erroresSintacticos = [];
+    let erroresLexicosYSintacticos = [];
+
+    exports.errL = function(){
+        return erroresLexicos;
+    }
+
+    exports.errS = function(){
+        return erroresSintacticos;
+    }
+
+    exports.LimpiarV = function(){
+        erroresLexicos = [];
+        erroresSintacticos = [];
+        erroresLexicosYSintacticos = [];
+        ArchivoJson = [];
+        claseT = [];
+        metodosT = [];
+        varA = [];
+        identVar = [];
+        parametroT = [];
+    }
+
+    exports.errLS = function(){
+        return erroresLexicosYSintacticos;
+    } 
+
+    exports.ArchivoJava = function(){
+        return ArchivoJson;
+    }
 %}
 /*  Directivas lexicas, expresiones regulares ,Analisis Lexico */
 %lex
@@ -117,7 +159,7 @@
 <<EOF>>               {return 'EOF';}
 
 /*  ERRORES LEXICOS */
-.                   {console.error("error lexico: " + yytext)}
+.                   {erroresLexicos.push({Tipo_Error: 'Error_Lexico',Error : yytext , Fila  : yylloc.first_line , Columna  :  yylloc.first_column });erroresLexicosYSintacticos.push({ Tipo_Error  : ' Error_Lexico ', Error  : yytext , Fila  : yylloc.first_line , Columna  :  yylloc.first_column });}
 
 /lex
 
@@ -146,6 +188,7 @@ CONTENIDO
     | IMPORT {$$ = [$1];}
     | CONTENIDO CLASES {$1.push($2); $$ = $1;}
     | CLASES {$$ = [$1];}
+    |  error {$$ ='';erroresSintacticos.push({ Tipo_Error  : ' Error_Sintactico ', Error  : yytext , Fila  : this._$.first_line , Columna  :  this._$.first_column });erroresLexicosYSintacticos.push({ Tipo_Error  : ' Error_Sintactico ', Error  : yytext , Fila  : this._$.first_line , Columna  :  this._$.first_column });}
 ;
 /*----------------------------------------------------------------------IMPORTS----------------------------------------------------------------------*/
 IMPORT
@@ -176,7 +219,7 @@ DEFINE_IMPORT
 
 /*----------------------------------------------------------------------CLASES----------------------------------------------------------------------*/
 CLASES 
-    : R_Class Identificador S_LlaveAbre  LISTA_CLASES S_LlaveCierra {$$ = API.n_Clase($2,$4);} //{$$ = $1+ $2 + $3 + $4 + $5;}{console.log(JSON.stringify($1, null, 2));
+    : R_Class Identificador S_LlaveAbre  LISTA_CLASES S_LlaveCierra {ArchivoJson.push({Tipo:'Clase', Nombre: $2 , Contenido: metodosT });metodosT = [];$$ = API.n_Clase($2,$4); } //{$$ = $1+ $2 + $3 + $4 + $5;}{console.log(JSON.stringify($1, null, 2));
 ;
 
 LISTA_CLASES
@@ -185,22 +228,27 @@ LISTA_CLASES
 ;
 
 CONTENIDO_CLASE
-    : TIPO_DATO Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ =API.n_Metodo_Funcion($1,$2,$4,$7);}//$1 + $2 + $3 +$4 + $5 + $6 + $7 + $8
-    | VARIABLE {$$=1;}
+    : TIPO_DATO Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {metodosT.push({Tipo : 'Funcion',Tipo_Retorno : $1,Nombre : $2, Parametros : parametroT,Contenido : varA});parametroT = [];varA=[];$$ =API.n_Metodo_Funcion($1,$2,$4,$7);}//$1 + $2 + $3 +$4 + $5 + $6 + $7 + $8
+    | VARIABLE {varA = [];$$=$1;}
     | R_Void METODO_VOID {$$ =$2;}
-    | LLAMAR_METODOF_CLASE {$$=1;} 
+    | LLAMAR_METODOF_CLASE 
+    |  error {$$ ='';erroresSintacticos.push({ Tipo_Error  : ' Error_Sintactico ', Error  : yytext , Fila  : this._$.first_line , Columna  :  this._$.first_column });erroresLexicosYSintacticos.push({ Tipo_Error  : ' Error_Sintactico ', Error  : yytext , Fila  : this._$.first_line , Columna  :  this._$.first_column });} 
     
 ;
 
 METODO_VOID
-    : R_Main S_ParentesisAbre S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ = API.n_Metodo_Principal($5);}
-    | Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {$$ = API.n_Metodo($1,$3,$6);}
+    : R_Main S_ParentesisAbre S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {metodosT.push({Tipo : 'Main', Contenido : varA}); varA = [];$$ = API.n_Metodo_Principal($5);}
+    | Identificador S_ParentesisAbre PARAMETROS S_ParentesisCierra S_LlaveAbre INSTRUCCIONES S_LlaveCierra {metodosT.push({Tipo : 'Metodo',Nombre : $1, Parametros : parametroT,Contenido : varA});parametroT = []; varA = [];$$ = API.n_Metodo($1,$3,$6);}
 ;
 
 /*----------------------------------------------------------------------VARIABLE----------------------------------------------------------------------*/
 
 VARIABLE
-    : TIPO_DATO LISTADO_ID_VARIABLE S_PuntoComa                      {$$ = API.n_Declaracion($1 , $2);}
+    : TIPO_DATO LISTADO_ID_VARIABLE S_PuntoComa                      {
+        $2.forEach(element =>{
+            varA.push({Tipo : $1, Nombre : element.Identificador});
+        });
+        $$ = API.n_Declaracion($1 , $2);}
 ;
 
 LISTADO_ID_VARIABLE
@@ -248,8 +296,8 @@ EXPRESION_G
     | EXPRESION_G OP_Modulo EXPRESION_G                                                          { $$ = API.operacion_Binaria($1,$3,TIPO_OPERACION.MODULO); }
     | CONTENIDO_EXPRESION OP_Decremento %prec PRUEBA                                             { $$ = API.operacion_Unaria($1,TIPO_OPERACION.MODULO); }
     | CONTENIDO_EXPRESION OP_Incremento %prec PRUEBA                                             { $$ = API.operacion_Unaria($1,TIPO_OPERACION.DECREMENTO); }
-    | OP_Menos  CONTENIDO_EXPRESION     %prec UMINUS                                             { $$ = API.operacion_Unaria($2,TIPO_OPERACION.NEGATIVO); }
-    | LOG_Not   CONTENIDO_EXPRESION     %prec UMINUS                                             { $$ = API.operacion_Unaria($2,TIPO_OPERACION.NOT); }
+    | OP_Menos  EXPRESION_G     %prec UMINUS                                             { $$ = API.operacion_Unaria($2,TIPO_OPERACION.NEGATIVO); }
+    | LOG_Not   EXPRESION_G     %prec UMINUS                                             { $$ = API.operacion_Unaria($2,TIPO_OPERACION.NOT); }
     | CONTENIDO_EXPRESION                                                                        { $$ = $1; }  
 ;
 
@@ -302,7 +350,7 @@ LISTA_PARAMETROS
 ;
 
 DEFINIR_PARAMETRO
-    : TIPO_DATO Identificador {$$ = API.n_ParametroM($1,$2);}
+    : TIPO_DATO Identificador {parametroT.push({Tipo : $1,Nombre: $2});$$ = API.n_ParametroM($1,$2);}
 ;
 /*---------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 /*--------------------------------------------------------------------LLAMADAS FUNCION DENTRO METODOS----------------------------------------------------------------------*/
@@ -349,7 +397,7 @@ LISTA_INSTRUCCIONES
     | LOOP_FOR  //ya esta
     | SENT_SWITCH // ya esta
     | S_TRANSFERENCIA //ya esta
-    | error S_PuntoComa {console.error("Error Sintactico: " + yytext +" Fila: " + yylineno);}
+    |  error {$$ ='';erroresSintacticos.push({ Tipo_Error  : ' Error_Sintactico ', Error  : yytext , Fila  : this._$.first_line , Columna  :  this._$.first_column });erroresLexicosYSintacticos.push({ Tipo_Error  : ' Error_Sintactico ', Error  : yytext , Fila  : this._$.first_line , Columna  :  this._$.first_column });}
 ;
 /*---------------------------------------------PRINT---------------------------------------------------------*/
 IMPRIMIR 

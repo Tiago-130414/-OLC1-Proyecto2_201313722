@@ -189,7 +189,7 @@ const API ={
 
   n_Default: function(instrucciones) {
 		return {
-			Tipo: TIPO_INSTRUCCION.CASE,
+			Tipo: TIPO_INSTRUCCION.DEFAULT,
 			Instrucciones: instrucciones
 		}
   },

@@ -24,7 +24,10 @@
     />
     <!-- Load jQuery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.8/themes/default/style.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.8/themes/default/style.min.css"
+    />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.8/jstree.min.js"></script>
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
@@ -105,16 +108,39 @@
                 </li>
               </ul>
             </li>
-            <li><a href="#" onclick="conexion();">Analizar</a></li>
+
+            <li class="dropdown">
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown"
+                >Analisis<b class="caret"></b
+              ></a>
+              <ul class="dropdown-menu">
+                <li class="dropdown-header">Analisis</li>
+                <li>
+                  <a href="#" onclick="conexion();">Analizar Archivo 1</a>
+                </li>
+                <li>
+                  <a href="#" onclick="conexion2();">Analizar Archivo 2</a>
+                </li>
+              </ul>
+            </li>
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown"
                 >Reportes<b class="caret"></b
               ></a>
               <ul class="dropdown-menu">
                 <li class="dropdown-header">Reportes</li>
-                <li><a href="#" onclick="recuperarArbol();">Errores</a></li>
-                <li><a href="#">Clases Copia</a></li>
-                <li><a href="#">Funciones Copia</a></li>
+                <li>
+                  <a href="#" onclick="recuperarArbolReporte();">Reporte Ast</a>
+                </li>
+                <li><a href="#" onclick="recuperarErrLS();">Errores</a></li>
+                <li>
+                  <a href="#" onclick="reporteClasesCopia();">Clases Copia</a>
+                </li>
+                <li>
+                  <a href="#" onclick="recuperarFuncionesCopia();"
+                    >Funciones Copia</a
+                  >
+                </li>
                 <li><a href="#">Variables Copia</a></li>
               </ul>
             </li>
@@ -224,33 +250,23 @@
         </div>
       </div>
     </section>
-
-
-
-
-
-
     <section class="page-section padding-60">
       <div class="container team-member">
         <div class="row">
-             <div class="row">
-                <div id="JSTree"></div>
-
+          <div class="col-md-6">
+            <div class="container intro">
+              <div class="row">
+                <!-- Tabpanel -->
+                <div id="tabpanel5">
+                  <h2>Reporte AST</h2>
+                  <div id="JSTree"></div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </section>
-
-
-
-
-
-
-
-
-
-
     <!-- FOOTER 1 -->
     <footer>
       <div class="container">
@@ -275,5 +291,6 @@
     <script src="js/Guardar_Como.js"></script>
     <script src="js/Solicitudes.js"></script>
     <script src="js/JSTree.js"></script>
+    <script src="js/LeerJson.js"></script>
   </body>
 </html>
