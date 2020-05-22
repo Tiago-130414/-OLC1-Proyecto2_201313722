@@ -72,6 +72,18 @@ function recuperarFuncionesCopia() {
       txt.innerHTML = myJson.txt;
     });
 }
+//GET PARA RECUPERAR REPORTE VARIABLES COPIA
+function recuperarVariablesCopia() {
+  var url = "http://localhost:3000/api/index/RetornarReporteVariablesCopia";
+  var txt = document.getElementById("salidaTxt");
+  fetch(url)
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (myJson) {
+      txt.innerHTML = myJson.txt;
+    });
+}
 
 //GET REPORTE AST
 function recuperarArbolReporte() {

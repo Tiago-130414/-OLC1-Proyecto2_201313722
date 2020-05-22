@@ -2,7 +2,8 @@ const { main } = require("./ReporteAst");
 const { param } = require(".");
 
 exports.reporteClaseCopia = function (Arbolito1, Arbolito2) {
-  var reporte = "/*****************   REPORTE CLASES COPIA  *****************\\" + "\n";
+  var reporte =
+    "/*****************   REPORTE CLASES COPIA  *****************\\" + "\n";
   var sonCopia = true;
   var nombClase = "";
   var cont_main = 0;
@@ -54,14 +55,23 @@ exports.reporteClaseCopia = function (Arbolito1, Arbolito2) {
     }
 
     if (sonCopia == true) {
-      reporte += "Archivos copia\nNombre Clase: " + nombClase + "\nN_Metodos: " + cont_metodo + "\nN_Funciones: " +cont_funcion+ "\nN_Main: " + cont_main + "\n\n";
+      reporte +=
+        "Archivos copia\nNombre Clase: " +
+        nombClase +
+        "\nN_Metodos: " +
+        cont_metodo +
+        "\nN_Funciones: " +
+        cont_funcion +
+        "\nN_Main: " +
+        cont_main +
+        "\n\n";
     }
     cont_metodo = 0;
     cont_funcion = 0;
     cont_main = 0;
   });
   return reporte;
-}
+};
 
 function buscarClaseAr2(Arbolito2, nombreCO) {
   var encontrado = null;
@@ -130,9 +140,9 @@ function compararParametro(parametrosO, parametrosC) {
   return iguales;
 }
 
-
-exports.reporteFuncionesCopia = function(Arbolito1, Arbolito2){
-  var reporte = "/*****************   REPORTE FUNCIONES COPIA  *****************\\" + "\n";
+exports.reporteFuncionesCopia = function (Arbolito1, Arbolito2) {
+  var reporte =
+    "/*****************   REPORTE FUNCIONES COPIA  *****************\\" + "\n";
   var nombClase = "";
   var nombFuncion = "";
   var nombMetodo = "";
@@ -151,11 +161,19 @@ exports.reporteFuncionesCopia = function(Arbolito1, Arbolito2){
               contenidoAO.Parametros
             );
             if (metodoCopia != null) {
-              nombMetodo = contenidoAO.Nombre,
-              parametrosReporte = contenidoAO.Parametros;
-              reporte += "Nombre Clase: " + nombClase + "\nNombre Metodo: " + nombMetodo + "\nTipo Retorno: void" + "\nParametros: " + leerParametros(parametrosReporte) + "\n\n";
+              (nombMetodo = contenidoAO.Nombre),
+                (parametrosReporte = contenidoAO.Parametros);
+              reporte +=
+                "Nombre Clase: " +
+                nombClase +
+                "\nNombre Metodo: " +
+                nombMetodo +
+                "\nTipo Retorno: void" +
+                "\nParametros: " +
+                leerParametros(parametrosReporte) +
+                "\n\n";
             }
-          }else if (contenidoAO.Tipo == "Funcion") {
+          } else if (contenidoAO.Tipo == "Funcion") {
             var funcionCopia = buscarFuncion(
               claseCopia.Contenido,
               contenidoAO.Tipo_Retorno,
@@ -164,11 +182,19 @@ exports.reporteFuncionesCopia = function(Arbolito1, Arbolito2){
             );
             if (funcionCopia != null) {
               retorno = contenidoAO.Tipo_Retorno;
-              nombFuncion = contenidoAO.Nombre,
-              parametrosReporte = contenidoAO.Parametros;
-              reporte += "Nombre Clase: " + nombClase + "\nNombre Metodo: " + nombFuncion + "\nTipo Retorno: " + retorno + "\nParametros: " + leerParametros(parametrosReporte) + "\n";
+              (nombFuncion = contenidoAO.Nombre),
+                (parametrosReporte = contenidoAO.Parametros);
+              reporte +=
+                "Nombre Clase: " +
+                nombClase +
+                "\nNombre Metodo: " +
+                nombFuncion +
+                "\nTipo Retorno: " +
+                retorno +
+                "\nParametros: " +
+                leerParametros(parametrosReporte) +
+                "\n";
             }
-            
           }
         });
       } else {
@@ -177,12 +203,115 @@ exports.reporteFuncionesCopia = function(Arbolito1, Arbolito2){
     }
   });
   return reporte;
-} 
+};
 
-function leerParametros(par){
+exports.reporteVariablesCopia = function (Arbolito1, Arbolito2) {
+  var reporte =
+  "/*****************   REPORTE VARIABLES COPIA  *****************\\" + "\n";
+  var nombClase = "";
+  var nombFuncion = "";
+  var nombMetodo = "";
+  var nombMain = "Main";
+  Arbolito1.forEach((element) => {
+    if (element.Tipo == "Clase") {
+      var claseCopia = buscarClaseAr2(Arbolito2, element.Nombre);
+      nombClase = element.Nombre;
+      if (claseCopia != null) {
+        element.Contenido.forEach((contenidoAO) => {
+          if (contenidoAO.Tipo == "Main") {
+            var mainCopia = buscarMain(claseCopia.Contenido);
+            if (mainCopia != null) {
+              var variables = buscarVariables(
+                contenidoAO.Contenido,
+                mainCopia.Contenido
+              );
+              if (variables.length != 0) {
+                reporte +=
+                  "Clase: " +
+                  nombClase +
+                  "\nMetodo: " +
+                  nombMain +
+                  "\nVariables: " +
+                  variables +
+                  "\n\n";
+              }
+            }
+          } else if (contenidoAO.Tipo == "Metodo") {
+            var metodoCopia = buscarMetodo(
+              claseCopia.Contenido,
+              contenidoAO.Nombre,
+              contenidoAO.Parametros
+            );
+            if (metodoCopia != null) {
+              var variables = buscarVariables(
+                contenidoAO.Contenido,
+                metodoCopia.Contenido
+              );
+              nombMetodo = contenidoAO.Nombre;
+              if (variables.length != 0) {
+                reporte +=
+                  "Clase: " +
+                  nombClase +
+                  "\nMetodo: " +
+                  nombMetodo +
+                  "\nVariables: " +
+                  variables +
+                  "\n\n";
+              }
+            }
+          } else if (contenidoAO.Tipo == "Funcion") {
+            var funcionCopia = buscarFuncion(
+              claseCopia.Contenido,
+              contenidoAO.Tipo_Retorno,
+              contenidoAO.Nombre,
+              contenidoAO.Parametros
+            );
+            if (funcionCopia != null) {
+              var variables = buscarVariables(
+                contenidoAO.Contenido,
+                funcionCopia.Contenido
+              );
+              nombFuncion = contenidoAO.Nombre;
+              if (variables.length != 0) {
+                reporte +=
+                  "Clase: " +
+                  nombClase +
+                  "\nFuncion: " +
+                  nombFuncion +
+                  "\nVariables: " +
+                  variables +
+                  "\n\n";
+              }
+            }
+          }
+        });
+      }
+    }
+  });
+  return reporte;
+};
+
+function leerParametros(par) {
   var parametrosS = "";
-  par.forEach(element =>{
-    parametrosS += element.Tipo +" " + element.Nombre +" ";
+  par.forEach((element) => {
+    parametrosS += element.Tipo + " " + element.Nombre + " ";
   });
   return parametrosS;
 }
+
+function buscarVariables(contenidoO, contenidoCopia) {
+  var variablesCopia = "";
+  var tipo = "";
+  var nom = "";
+  contenidoO.forEach((varO) => {
+    tipo = varO.Tipo;
+    nom = varO.Nombre;
+    contenidoCopia.forEach((varC) => {
+      if (tipo == varC.Tipo && nom == varC.Nombre) {
+        variablesCopia += tipo + " " + nom + " ";
+      }
+    });
+  });
+  return variablesCopia;
+}
+

@@ -15,17 +15,24 @@ var ErroresSintacticos;//errores Sintacticos
 var ErroresLS;// errores lexico Sintacticos
 
 
-//GET RETORNAR ARBOL1
+//GET RETORNAR clases copia
 router.get("/RetornarReporteClasesCopia", (req, res) => {
   const reporteCC = require('./VerificadorCopias'); 
   var txto = reporteCC.reporteClaseCopia(Arbolito1,Arbolito2);
   res.json({txt: txto});
 });
 
-//GET RETORNAR ARBOL2
+//GET RETORNAR funciones copia
 router.get("/RetornarReporteFuncionesCopia", (req, res) => {
   const reporteFC = require('./VerificadorCopias'); 
   var txto = reporteFC.reporteFuncionesCopia(Arbolito1,Arbolito2);
+  res.json({txt:txto});
+});
+
+//GET RETORNAR variables copia
+router.get("/RetornarReporteVariablesCopia", (req, res) => {
+  const reporteVC = require('./VerificadorCopias'); 
+  var txto = reporteVC.reporteVariablesCopia(Arbolito1,Arbolito2);
   res.json({txt:txto});
 });
 
